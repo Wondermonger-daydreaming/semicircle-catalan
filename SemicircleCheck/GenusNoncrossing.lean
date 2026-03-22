@@ -1,20 +1,17 @@
-/-
-  GENUS ZERO ↔ NONCROSSING: Corrected Blueprint
-  
+/-!
+  GENUS ZERO ↔ NONCROSSING
+
   The combinatorial heart of the Wigner semicircle law:
   a pairing of {0, ..., 2n-1} has genus zero if and only if
   it is noncrossing. Consequently, the number of genus-zero
   pairings equals the Catalan number Cₙ.
-  
-  This version incorporates structural corrections:
+
+  Key design choices:
   - `Pairing n` as a subtype (no dependent proof parameters)
   - `numCycles` counting ALL cycles including fixed points
   - `finRotate` for the long cycle (not `cycleOf`)
   - Recursive noncrossing predicate (not brittle arc-crossing)
   - Three-stage proof decomposition via cycle count bound
-  
-  STATUS: Compilable definitions, sorry'd proofs.
-  Blueprint for formalization, not a finished artifact.
 -/
 
 import Mathlib.Combinatorics.Enumerative.Catalan

@@ -942,7 +942,7 @@ lemma outside_closed_of_noncrossing {n : ℕ} (p : Pairing (n + 1))
   have : (p.val x).val > (p.val ⟨0, by omega⟩).val := by omega
   rw [hspec] at this; exact this
 
-/-! ### Helper: the inside pairing (sorry'd construction)
+/-! ### Helper: the inside pairing
 
     Given a noncrossing pairing p on 2(n+1) with p(0) = 2k+1, the shadow
     {1,...,2k} is closed under p. Restricting p to this interval and
@@ -1178,9 +1178,7 @@ noncomputable def restrictOutsidePerm {n : ℕ} (p : Pairing (n + 1))
     -- If we can show that the double application equals j at the Fin level:
     -- For any bound proofs h_inner and h_outer, if the inner Fin has same val as p(j+off),
     -- then p applied to it gives j+off, and (j+off) - off = j.
-    -- Let me just supply the chain manually with sorry removed
-    -- after testing if the proof term from the def actually matches
-    -- TRY: just use omega with ALL relevant congrArg facts pre-computed
+    -- Supply the chain manually, using omega with all relevant congrArg facts pre-computed
     -- Unify the inner Fin proof: the second toFun call creates ⟨j'+off, proof'⟩
     -- where j' = toFun(j) = ⟨pv - off, _⟩, so j'+off = pv - off + off
     -- and proof' uses j'.isLt. We need (p.val ⟨pv-off+off, proof'⟩).val
@@ -1358,9 +1356,7 @@ noncomputable def restrictOutsidePerm {n : ℕ} (p : Pairing (n + 1))
     -- If we can show that the double application equals j at the Fin level:
     -- For any bound proofs h_inner and h_outer, if the inner Fin has same val as p(j+off),
     -- then p applied to it gives j+off, and (j+off) - off = j.
-    -- Let me just supply the chain manually with sorry removed
-    -- after testing if the proof term from the def actually matches
-    -- TRY: just use omega with ALL relevant congrArg facts pre-computed
+    -- Supply the chain manually, using omega with all relevant congrArg facts pre-computed
     -- Unify the inner Fin proof: the second toFun call creates ⟨j'+off, proof'⟩
     -- where j' = toFun(j) = ⟨pv - off, _⟩, so j'+off = pv - off + off
     -- and proof' uses j'.isLt. We need (p.val ⟨pv-off+off, proof'⟩).val

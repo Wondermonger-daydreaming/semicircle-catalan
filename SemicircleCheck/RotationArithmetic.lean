@@ -3,17 +3,12 @@ import Mathlib.GroupTheory.Perm.Cycle.Type
 import Mathlib.Data.Fin.Basic
 
 /-!
-  ROTATION ARITHMETIC: Closing the deleteAdjacent sorrys
+  ROTATION ARITHMETIC
 
-  Refined from GPT 5.4's proof sketch. Three corrections applied:
+  `finRotate` arithmetic and conjugation lemmas for `deleteAdjacent`.
 
-  1. `rfl` won't fire for conjugation unfolding — need `simp [mul_apply]`
-  2. `rotateToZero_apply` needs careful Fin modular arithmetic
-  3. `hp_back` derivation tightened via `Equiv.apply_eq_iff_eq`
-
-  The strategic insight (GPT's, preserved intact): isolate ALL finRotate
-  arithmetic into exactly two lemmas (hρ0 and hρ1), then derive everything
-  else by group theory.
+  The strategic insight: isolate ALL finRotate arithmetic into exactly
+  two lemmas (hρ0 and hρ1), then derive everything else by group theory.
 -/
 
 open Equiv Equiv.Perm

@@ -62,7 +62,7 @@ semicircle-catalan/
 │   ├── GenusNoncrossing.lean     — Core definitions, genus bridge theorem
 │   ├── CatalanRecurrence.lean    — Catalan decomposition + counting theorem
 │   └── Census.lean               — Computational verification for small n
-├── SemicircleCheck.lean          — Library root
+├── SemicircleCheck.lean          — Library root (imports all modules)
 ├── lakefile.toml                 — Lake build configuration
 ├── lean-toolchain                — Lean 4.29.0-rc6
 ├── lake-manifest.json            — Dependency lock
