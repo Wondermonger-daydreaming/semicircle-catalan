@@ -6,7 +6,7 @@ For pairings of $\text{Fin}(2n)$, the composition $\gamma\pi$ of the long cycle 
 
 ## Status
 
-**Sorry-free.** All definitions and theorems compile without `sorry` against Lean 4.29.0-rc6 and Mathlib (1289 jobs, ~2 min with cache). See [HANDOFF.md](HANDOFF.md) for the development history and hard-won lessons.
+**Sorry-free.** All definitions and theorems compile without `sorry` against Lean 4.29.0-rc6 and Mathlib (1289 jobs, ~2 min with cache).
 
 ## Core definitions
 
@@ -61,27 +61,11 @@ semicircle-catalan/
 │   ├── RotationArithmetic.lean   — finRotate arithmetic + group theory layer
 │   ├── GenusNoncrossing.lean     — Core definitions, genus bridge theorem
 │   ├── CatalanRecurrence.lean    — Catalan decomposition + counting theorem
-│   ├── Census.lean               — Computational verification for small n
-│   └── Basic.lean                — Root imports
+│   └── Census.lean               — Computational verification for small n
 ├── SemicircleCheck.lean          — Library root
 ├── lakefile.toml                 — Lake build configuration
 ├── lean-toolchain                — Lean 4.29.0-rc6
 ├── lake-manifest.json            — Dependency lock
-├── assets/
-│   ├── semicircle_explorer.jsx   — React interactive visualization
-│   ├── chord_diagrams.png        — Noncrossing vs crossing pairings
-│   ├── genus_census_6pts.png     — All pairings at 6 points by genus
-│   ├── genus_census_8pts.png     — All pairings at 8 points by genus
-│   ├── genus_representatives.png — Representative pairing per genus
-│   ├── breaking_semicircle.png   — Universality-breaking conditions
-│   ├── universality.png          — Convergence across distributions
-│   ├── bandwidth_transition.gif  — Bandwidth effect animation
-│   └── sparsity_transition.gif   — Sparsity effect animation
-├── notes/
-│   ├── diary.md                  — Session log (2026-03-19)
-│   ├── breathe.md                — 40 stimulus questions for future work
-│   └── fragments.md              — Conversation highlights
-├── HANDOFF.md                    — Development history + lessons learned
 ├── README.md
 └── LICENSE
 ```
@@ -154,7 +138,20 @@ The genus distribution follows the Harer-Zagier numbers. At 12 points, genus-2 p
 
 ## Acknowledgments
 
-This formalization was built collaboratively by multiple contributors and AI systems, with the Lean 4 typechecker as final arbiter. The project originated from a computational exploration of the Wigner semicircle law and was developed over the course of several days in March 2026.
+This formalization project was built using [OpenGauss](https://github.com/math-inc/OpenGauss) by [Math, Inc.](https://www.math.inc/), a project-scoped Lean workflow orchestrator that provides a multi-agent frontend for the `lean4-skills` proving, drafting, and autoformalization workflows developed by Cameron Freer.
+
+OpenGauss handled project management, managed backend setup, workflow spawning, swarm tracking, and recovery throughout the formalization process. Its `autoprove` and `sorry-filler-deep` workflows, backed by Claude Code (Anthropic's Claude Opus 4.6), were responsible for filling the majority of proof obligations across `RotationArithmetic.lean`, `GenusNoncrossing.lean`, and `CatalanRecurrence.lean`.
+
+Several results in this project were discovered or corrected by the autoprove agent during formalization, including a boundary condition error at n=0 affecting three theorem statements, and a sign-based parity proof for the genus formula assembled from Mathlib's permutation group infrastructure.
+
+OpenGauss was developed with support from DARPA's expMath (Exponentiating Mathematics) program and launched at the expMath kickoff. We are grateful to the Math, Inc. team for making it openly available.
+
+We also acknowledge:
+
+- The [Lean](https://lean-lang.org/) theorem prover and the [Lean FRO](https://lean-lang.org/fro/about/)
+- [Mathlib](https://leanprover-community.github.io/), the community-driven mathematical library for Lean 4
+- [Anthropic](https://www.anthropic.com/) for Claude Code and Claude Opus 4.6
+- The [Basin (Anima Mundi)](https://discord.gg/animamundi) cross-architectural AI dialogue community, where early versions of the semicircle law formalization were developed through multi-model collaboration
 
 ## License
 
