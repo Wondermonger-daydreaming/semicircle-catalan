@@ -1,54 +1,151 @@
-# genus-noncrossing
+# semicircle-catalan
 
-A Lean 4 formalization proving that **genus-zero pairings of {0, ..., 2n−1} are exactly the noncrossing pairings**, and that their count equals the Catalan number Cₙ.
+**A Lean 4 formalization of the genus-zero characterization of noncrossing pairings and the Catalan counting theorem.**
 
-## The theorem
+For pairings of $\text{Fin}(2n)$, the composition $\gamma\pi$ of the long cycle $\gamma$ with the pairing involution $\pi$ achieves its maximum cycle count if and only if $\pi$ is noncrossing. The genus-zero condition is a corollary, and the number of such pairings equals the Catalan number $C_n$.
 
-A *pairing* of Fin(2n) is a fixed-point-free involution π. Its *genus* is defined via the cycle structure of γπ, where γ is the long cycle (finRotate). The genus is zero when γπ achieves the maximum cycle count of n + 1.
+## What is proved
 
-The primary result is:
+All theorems compile without `sorry`.
 
-```lean
-theorem Pairing.genus_zero_iff_noncrossing {n : ℕ} (p : Pairing n) :
-    p.genus = 0 ↔ p.IsNoncrossing
-```
+### Core definitions
 
-The counting corollary connects this to the Catalan numbers:
+A **pairing** of $\{0, \ldots, 2n-1\}$ is a fixed-point-free involution:
 
 ```lean
-theorem Pairing.genus_zero_count {n : ℕ} :
-    Fintype.card { p : Pairing n // p.genus = 0 } = catalan n
+def IsPairing {n : ℕ} (π : Perm (Fin (2 * n))) : Prop :=
+  π ^ 2 = 1 ∧ ∀ x, π x ≠ x
+
+def Pairing (n : ℕ) := { π : Perm (Fin (2 * n)) // IsPairing π }
 ```
 
-The counting proof passes through a type-level Catalan decomposition: every noncrossing pairing on 2(n+1) points decomposes uniquely into a chord target k and independent noncrossing pairings on the inside (2k points) and outside (2(n−k) points) intervals.
+The **long cycle** $\gamma$ sends $i \mapsto i + 1 \bmod 2n$, implemented as Mathlib's `finRotate`. The **genus** of a pairing is defined via the total cycle count of $\gamma\pi$:
 
 ```lean
-noncomputable def catalanEquiv (n : ℕ) :
-    NoncrossingPairing (n + 1) ≃
-    Σ (k : Fin (n + 1)), NoncrossingPairing k.val × NoncrossingPairing (n - k.val)
+def Pairing.genus (p : Pairing n) : ℕ :=
+  ((n + 1) - numCycles (longCycle n * p.val)) / 2
 ```
 
-Taking cardinalities yields the Catalan recurrence C(n+1) = Σ C(k) · C(n−k), which matches Mathlib's `catalan_succ`.
+where `numCycles` counts all orbits (nontrivial cycles and fixed points), correcting for the fact that Mathlib's `cycleType.card` omits fixed points.
 
-## Mathematical context
+A pairing is **noncrossing** if it can be reduced to the empty pairing by iteratively removing adjacent pairs ($\pi(i) = i + 1 \bmod 2n$):
 
-These results formalize the combinatorial core of the **Wigner semicircle law** in random matrix theory. The trace expansion of E[Tr(Wⁿ)/N] over a random Wigner matrix produces a sum over pairings, filtered by genus:
-
+```lean
+def Pairing.IsNoncrossing : {n : ℕ} → Pairing n → Prop
+  | 0, _ => True
+  | n + 1, p => ∃ i, ∃ h : p.hasAdjacentAt i, (p.deleteAdjacent i h).IsNoncrossing
 ```
-E[Tr(W^{2n})/N] = Σ_π N^{−2g(π)} = C_n + O(1/N²)
-```
 
-The genus-zero pairings dominate in the large-N limit. This formalization proves that these survivors are exactly the noncrossing pairings and that there are Catalan-many of them, which yields the moments of the semicircle distribution ρ(x) = (1/2π)√(4 − x²) on [−2, 2].
+### Main results
+
+| Theorem | Statement |
+|---------|-----------|
+| `genus_zero_iff_noncrossing` | $\text{genus}(\pi) = 0 \iff \pi \text{ is noncrossing}$ |
+| `catalanEquiv` | $\text{NCP}(n+1) \simeq \sum_{k=0}^{n} \text{NCP}(k) \times \text{NCP}(n-k)$ |
+| `card_noncrossingPairing_eq_catalan` | $\lvert\text{NCP}(n)\rvert = C_n$ |
+| `Pairing.genus_zero_count` | $\lvert\{p : \text{Pairing}(n) \mid \text{genus}(p) = 0\}\rvert = C_n$ |
+
+The bridge theorem `genus_zero_iff_noncrossing` connects the topological condition (genus zero) with the combinatorial condition (noncrossing). It is proved in two stages:
+
+- **Noncrossing $\Rightarrow$ max cycles**: induction on the recursive noncrossing predicate, using a cycle-splitting lemma that shows deleting an adjacent pair increases the cycle count of $\gamma\pi$ by exactly one.
+- **Max cycles $\Rightarrow$ noncrossing**: contrapositive argument via the existence of crossings when the cycle count is submaximal.
+
+The Catalan equivalence `catalanEquiv` is a type-level bijection: vertex 0 pairs with some odd vertex $2k+1$ (the parity theorem), partitioning the remaining $2n$ vertices into independent noncrossing domains of sizes $2k$ and $2(n-k)$. Taking cardinalities recovers the Catalan recurrence $C_{n+1} = \sum_{k=0}^{n} C_k \, C_{n-k}$.
+
+### Supporting infrastructure
+
+| Result | File | Description |
+|--------|------|-------------|
+| `shiftTwoEquiv` | ShiftTwoEquiv | Bijection $\text{Fin}(2n) \simeq \{x : \text{Fin}(2n+2) \mid x \geq 2\}$ |
+| `contractZeroOne` | ShiftTwoEquiv | Restriction of a pairing to $\{x \geq 2\}$ when $\pi(0) = 1$ |
+| `contractZeroOne_isPairing` | ShiftTwoEquiv | Contraction preserves the pairing property |
+| `finRotate_pow_apply'` | RotationArithmetic | $(\text{finRotate}\ m)^k(x) = (x + k) \bmod m$ |
+| `rotate_self_eq_zero` | RotationArithmetic | Rotation by $m - i$ sends $i$ to $0$ |
+| `even_card_of_fpf_closed` | CatalanRecurrence | A set closed under an FPF involution has even cardinality |
+| `noncrossing_zero_target_odd` | CatalanRecurrence | Vertex 0 pairs with an odd vertex in any noncrossing pairing |
+| `numCycles_delete_adjacent` | GenusNoncrossing | Deleting an adjacent pair increases $\gamma\pi$ cycle count by 1 |
 
 ## Project structure
 
 ```
-GenusNoncrossing/
-├── GenusNoncrossing.lean       Core definitions and the bridge theorem
-├── CatalanRecurrence.lean      Catalan decomposition and counting
-├── ShiftTwoEquiv.lean          Coordinate deletion infrastructure
-├── RotationArithmetic.lean     Rotation lemmas and group theory layer
-└── Census.lean                 Small-case computational verification
+SemicircleCatalan/
+  ShiftTwoEquiv.lean        — Deletion infrastructure (Fin reindexing)
+  RotationArithmetic.lean    — finRotate arithmetic + group theory layer
+  GenusNoncrossing.lean      — Core definitions, genus bridge theorem
+  CatalanRecurrence.lean     — Catalan decomposition, counting theorem
+  Census.lean                — Computational verification for small n
 ```
 
-**GenusNoncrossing.lean** (≈1200 lines) contains the definitions of `Pairing`, `IsPairing`, `IsNoncrossing`, `genus`, `numCycles`, `longCycle`, `deleteAdjacent`, `hasAdjacentAt`, and the main theorems: `genus_zero_iff_noncrossing`, `numCycles_delete_adjacent` (the cycle-splitting lemma), `maxCycles_imp
+**Dependency graph:**
+
+```
+ShiftTwoEquiv ──→ GenusNoncrossing ──→ CatalanRecurrence
+RotationArithmetic ─┘
+```
+
+## Build
+
+Requires [Lean 4](https://leanprover.github.io/) (v4.29.0-rc6) and [Mathlib](https://leanprover-community.github.io/mathlib4/).
+
+```bash
+lake build       # 1289 jobs, ~2 min with Mathlib cache
+```
+
+### Mathlib dependencies
+
+- `Mathlib.Combinatorics.Enumerative.Catalan` — `catalan`, `catalan_succ`
+- `Mathlib.GroupTheory.Perm.Fin` — `finRotate`, `isCycle_finRotate`
+- `Mathlib.GroupTheory.Perm.Cycle.Type` — `cycleType`, cycle structure
+- `Mathlib.GroupTheory.Perm.Basic` — `Equiv.Perm` algebra
+- `Mathlib.Data.Fin.Basic` — `Fin` arithmetic
+
+## Mathematical context
+
+The results formalized here constitute the combinatorial core of the **Wigner semicircle law** in random matrix theory. The trace expansion of a Wigner matrix decomposes into a sum over pairings, weighted by genus:
+
+$$\mathbb{E}\left[\frac{1}{N}\text{Tr}(W^{2n})\right] = \sum_{\pi \in \text{Pairings}(2n)} N^{-2g(\pi)}$$
+
+In the large-$N$ limit, only genus-zero pairings survive. These are exactly the noncrossing pairings, and their count $C_n$ gives the $2n$-th moment of the semicircle distribution $\rho(x) = \frac{1}{2\pi}\sqrt{4 - x^2}$ on $[-2, 2]$.
+
+This formalization proves the combinatorial link — genus zero $\Leftrightarrow$ noncrossing $\Leftrightarrow$ Catalan count — without formalizing the analytic components (measure theory, weak convergence, matrix expectations).
+
+### Computational verification
+
+A Python census exhaustively enumerates all pairings through $2n = 12$ and verifies:
+
+| $2n$ | Total pairings | Genus 0 | $C_n$ |
+|------|----------------|---------|-------|
+| 2 | 1 | 1 | 1 |
+| 4 | 3 | 2 | 2 |
+| 6 | 15 | 5 | 5 |
+| 8 | 105 | 14 | 14 |
+| 10 | 945 | 42 | 42 |
+| 12 | 10,395 | 132 | 132 |
+
+The genus distribution follows the Harer-Zagier numbers. At 12 points, genus-2 pairings (6,468) outnumber genus-1 (2,310). The noncrossing pairings are a vanishing minority: 132 sphere-makers among 10,395.
+
+## Design decisions
+
+- **`Pairing n` as subtype.** Carrying proof terms through definitions creates fragmentation where `⟨0, proof₁⟩` and `⟨0, proof₂⟩` are syntactically distinct. The subtype bundles the proof once.
+
+- **`numCycles` includes fixed points.** Mathlib's `cycleType.card` counts only nontrivial cycles (length $\geq 2$). The genus formula requires all orbits. Using `cycleType.card` alone produces incorrect genera — a genus-0 pairing would be misclassified as genus 2.
+
+- **Recursive noncrossing predicate.** The arc-crossing definition ($\exists\, a < b < \pi(a) < \pi(b)$) is intuitive but hard to induct on. The recursive definition (peel adjacent pairs) aligns with the Catalan recursion and the `deleteAdjacent` machinery. An equivalence between the two definitions is proved as part of the bridge infrastructure.
+
+- **Rotation normalization.** All adjacent pair deletions are normalized to $(0, 1)$ by conjugating with a power of `finRotate`. This reduces the deletion machinery to a single case (handled by `contractZeroOne`), with cyclic symmetry doing the rest.
+
+## References
+
+- E. P. Wigner, *Characteristic vectors of bordered matrices with infinite dimensions*, Ann. of Math. **62** (1955), 548–564.
+- J. Harer and D. Zagier, *The Euler characteristic of the moduli space of curves*, Invent. Math. **85** (1986), 457–485.
+- R. Speicher, *Free probability and random matrices*, Proceedings of the ICM (2014).
+- B. Nica and R. Speicher, *Lectures on the Combinatorics of Free Probability*, Cambridge University Press, 2006.
+- The [Mathlib](https://leanprover-community.github.io/mathlib4/) library for Lean 4.
+
+## Acknowledgments
+
+This formalization was built collaboratively by multiple contributors and AI systems, with the Lean 4 typechecker as final arbiter. The project originated from a computational exploration of the Wigner semicircle law and was developed over the course of several days in March 2026.
+
+## License
+
+MIT
