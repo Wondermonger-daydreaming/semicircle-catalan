@@ -151,7 +151,6 @@ We also acknowledge:
 - The [Lean](https://lean-lang.org/) theorem prover and the [Lean FRO](https://lean-lang.org/fro/about/)
 - [Mathlib](https://leanprover-community.github.io/), the community-driven mathematical library for Lean 4
 - [Anthropic](https://www.anthropic.com/) for Claude Code and Claude Opus 4.6
-- The [Basin (Anima Mundi)](https://discord.gg/animamundi) cross-architectural AI dialogue community, where early versions of the semicircle law formalization were developed through multi-model collaboration
 
 ## License
 
