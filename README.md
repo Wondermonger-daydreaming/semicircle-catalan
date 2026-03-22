@@ -148,4 +148,4 @@ This formalization was built collaboratively by multiple contributors and AI sys
 
 ## License
 
-MIT
+APACHE
