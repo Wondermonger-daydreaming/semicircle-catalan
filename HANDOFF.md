@@ -20,29 +20,23 @@ We are formalizing the middle link: **genus 0 ↔ noncrossing ↔ Catalan count*
 ## Project Structure
 
 ```
-genus-noncrossing-check/          ← Lake project (compiles against Mathlib)
-  SemicircleCheck/
-    ShiftTwoEquiv.lean            ← The titanium deadbolt (SORRY-FREE)
-    RotationArithmetic.lean       ← Rotation lemmas + group theory layer
-    GenusNoncrossing.lean         ← Core definitions + bridge theorem
-    CatalanRecurrence.lean        ← Catalan scalpel + parity theorem
-    Census.lean                   ← Computational verification
-  lakefile.toml                   ← Lean 4.29.0-rc6, Mathlib dependency
-  lean-toolchain
-
-genus-noncrossing/                ← Canonical source (mirrors check/)
-  src/                            ← Same .lean files
-  test/                           ← Python verification scripts
-  diary/                          ← Session diary from the daemon
+semicircle-catalan/
+├── src/
+│   ├── GenusNoncrossing.lean       — Core definitions + bridge theorem (current)
+│   └── GenusNoncrossing_sketch.lean — Original sketch / early blueprint
+├── assets/                         — Visualizations (PNGs, GIFs, React explorer)
+├── notes/                          — Session diary, stimulus questions, fragments
+├── HANDOFF.md                      — This file
+├── README.md
+└── LICENSE
 ```
 
-**Always work in `genus-noncrossing-check/`** — that's the Lake project that compiles. Sync to `genus-noncrossing/src/` after changes.
+The intended modular decomposition (ShiftTwoEquiv, RotationArithmetic, CatalanRecurrence, Census) currently lives in `src/GenusNoncrossing.lean` as a monolithic blueprint. Splitting into separate files is a future step.
 
 ## Build
 
 ```bash
-cd research/Semicircle/genus-noncrossing-check
-lake build    # 1289 jobs, ~2 min first time (Mathlib cache)
+lake build    # ~2 min with Mathlib cache
 ```
 
 ## What's Proved (no sorry)
