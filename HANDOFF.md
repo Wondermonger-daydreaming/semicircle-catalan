@@ -1,128 +1,78 @@
 # Semicircle Formalization — Handoff
 
-*For whoever wakes next.*
+*2026-03-21 (Session 4)*
 
 ---
 
-## What This Is
+## Status: SORRY-FREE
 
-A Lean 4 formalization of the combinatorial heart of the Wigner semicircle law: **genus zero ↔ noncrossing** for pairings, and the Catalan counting that follows. The theorem connects random matrix theory to enumerative combinatorics through a bridge that has been known since the 1970s but never (to our knowledge) formalized in a proof assistant.
+The entire project compiles with **zero sorries**. All Lean files build cleanly (1289 jobs, 0 errors).
 
-## The Chain
+## What Is Proved
 
-```
-E[Tr(W^{2n})/N] → trace expansion → pairing sum → genus filter
-→ genus 0 = noncrossing = Catalan → semicircle moments
-```
-
-We are formalizing the middle link: **genus 0 ↔ noncrossing ↔ Catalan count**.
-
-## Project Structure
+### GenusNoncrossing.lean — The Bridge Theorem
 
 ```
-semicircle-catalan/
-├── src/
-│   ├── GenusNoncrossing.lean       — Core definitions + bridge theorem (current)
-│   └── GenusNoncrossing_sketch.lean — Original sketch / early blueprint
-├── assets/                         — Visualizations (PNGs, GIFs, React explorer)
-├── notes/                          — Session diary, stimulus questions, fragments
-├── HANDOFF.md                      — This file
-├── README.md
-└── LICENSE
+genus_zero_iff_noncrossing : p.genus = 0 ↔ p.IsNoncrossing
 ```
 
-The intended modular decomposition (ShiftTwoEquiv, RotationArithmetic, CatalanRecurrence, Census) currently lives in `src/GenusNoncrossing.lean` as a monolithic blueprint. Splitting into separate files is a future step.
+For pairings (fixed-point-free involutions) on `Fin (2n)`, genus zero is equivalent to noncrossing. Proved via three stages:
+- **Stage A.** `numCycles(γπ) ≤ n + 1` (transposition factorization bound)
+- **Stage B.** Equality implies noncrossing (max-cycle pairings have adjacent pairs)
+- **Stage C.** Noncrossing implies equality (induction via `deleteAdjacent`)
 
-## Build
+### CatalanRecurrence.lean — The Catalan Equivalence + Counting
 
-```bash
-lake build    # ~2 min with Mathlib cache
+```
+catalanEquiv (n : ℕ) :
+    NoncrossingPairing (n + 1) ≃
+    Σ (k : Fin (n + 1)), NoncrossingPairing k.val × NoncrossingPairing (n - k.val)
 ```
 
-## What's Proved (no sorry)
+Vertex 0 pairs with odd vertex 2k+1, partitioning remaining vertices into independent inside/outside intervals. Sorry-free, including bridge theorems, parity theorem, decomposition, assembly, and round-trips.
 
-### ShiftTwoEquiv.lean — FULLY SORRY-FREE
-- `shiftTwoEquiv`: Fin(2n) ≃ {x : Fin(2n+2) | x ≥ 2}
-- `mapsTo_remaining`: π(0)=1 ∧ π(1)=0 → π maps {x≥2} to {x≥2}
-- `symm_mapsTo_remaining`: same for π⁻¹
-- `contractZeroOne`: restrict π to {x≥2}, conjugate through shiftTwoEquiv
-- `contractZeroOne_isPairing`: conjugation preserves involution + FPF
+```
+card_noncrossingPairing_eq_catalan (n : ℕ) :
+    Fintype.card (NoncrossingPairing n) = catalan n
 
-### RotationArithmetic.lean
-- `rotate_self_eq_zero`: finRotate^(m-i) sends i to 0
-- `inv_apply_of_apply`: ρ(a)=b → ρ⁻¹(b)=a (pure injectivity)
-- `involution_reverse`: π²=1 ∧ π(i)=j → π(j)=i
-- `conjugate_sends`: rotation + adjacency → conjugate sends a↦b
-- `conjugate_sends_back`: same via involution for reverse direction
+Pairing.genus_zero_count {n : ℕ} :
+    Fintype.card { p : Pairing n // p.genus = 0 } = catalan n
+```
 
-### CatalanRecurrence.lean
-- `insideEquiv`: Fin(2k) ≃ {i | 0 < i < 2k+1}
-- `outsideEquiv`: Fin(2(n-k)) ≃ {i | 2k+1 < i}
-- `even_card_of_fpf_closed`: **THE COMBINATORIAL LEDGER** — closed FPF-involution sets have even cardinality (strong induction, extract pair, recurse)
-- `shadow_closed_of_no_crossing`: **THE QUARANTINE** — if no crossings, shadow {1,...,p(0)-1} is closed under p
-- `noncrossing_mapsTo_shadow`: quarantine composed with bridge direction
-- Shadow cardinality = t-1 via Fin(t-1) ↪ Fin(2(n+1))
-- Parity wiring: Odd(t-1), Even demanded by ledger, absurd
+The counting theorem: genus-zero pairings are counted by the Catalan numbers. Proved by strong induction using `catalanEquiv` to match `Nat.catalan`'s recursive definition. Decidability of `IsNoncrossing` derived from the genus characterization.
 
-### GenusNoncrossing.lean
-- `longCycle_isCycle`: finRotate is a single cycle
-- `Fintype (Pairing n)`, `DecidablePred IsPairing`
+### Supporting Files
 
-### Census.lean
-- Small-case verification via `decide` (n=1,2 pairings)
-- Python census confirms Harer-Zagier table through n=6
+| File | Contents |
+|------|----------|
+| `ShiftTwoEquiv.lean` | Coordinate deletion {0,1} via uniform shift x → x+2 |
+| `RotationArithmetic.lean` | `finRotate` arithmetic, conjugation lemmas for `deleteAdjacent` |
+| `Census.lean` | Computational verification for small n |
 
-## What's Sorry'd (the frontier)
+## Architecture
 
-### Easy (routine, should fall quickly)
-| Lemma | File | Notes |
-|-------|------|-------|
-| `finRotate_pow_apply'` | RotationArithmetic | Induction on k, `Nat.add_mod` |
-| `rotate_succ_eq_one` | RotationArithmetic | finRotate value + omega |
+```
+Pairing.genus_zero_count
+├── card_noncrossingPairing_eq_catalan (strong induction on n)
+│   ├── catalanEquiv (Catalan decomposition bijection)
+│   │   ├── catalanDecompose (forward: extract k, restrict inside/outside)
+│   │   └── catalanAssemble (inverse: piecewise assembly)
+│   ├── catalan_succ (Mathlib: Catalan recurrence)
+│   └── Fintype.card_congr + card_sigma + card_prod
+└── genus_zero_iff_noncrossing (bridge theorem)
+    ├── numCycles_le (Stage A: upper bound)
+    ├── maxCycles_imp_noncrossing (Stage B: equality → noncrossing)
+    └── noncrossing_imp_maxCycles (Stage C: noncrossing → equality)
+```
 
-### Medium (combinatorial arguments)
-| Lemma | File | Notes |
-|-------|------|-------|
-| `IsNoncrossing_imp_no_crossing` | CatalanRecurrence | **Unlocks parity theorem.** Induction: bumps of length 1 can't interleave, remaining arcs biject with p' |
-| `no_crossing_imp_IsNoncrossing` | CatalanRecurrence | Existence of adjacent pairs in crossing-free pairings |
-| `numCycles_eq_num_orbits` | GenusNoncrossing | Bookkeeping: cycleType.card + fixedPoints = orbits |
-| `Pairing.numCycles_le` | GenusNoncrossing | Upper bound n+1 on cycle count for pairings |
-| `Pairing.genus_exact` | GenusNoncrossing | Parity of n+1 - numCycles |
+## The Semicircle Pipeline
 
-### Hard (deep combinatorial content)
-| Lemma | File | Notes |
-|-------|------|-------|
-| `numCycles_delete_adjacent` | GenusNoncrossing | **THE CYCLE-SPLITTING LEMMA.** Removing adjacent pair increases cycle count by 1. Orbit analysis. |
-| `maxCycles_imp_noncrossing` | GenusNoncrossing | Stage B: crossing → cycle merger (contrapositive) |
-| `noncrossing_imp_maxCycles` | GenusNoncrossing | Stage C: induction via deletion + splitting |
-| `catalanEquiv` | CatalanRecurrence | Full Catalan bijection NCP(n+1) ≃ Σ k, NCP(k) × NCP(n-k) |
-
-## Key Definitions
-
-```lean
--- A pairing is a fixed-point-free involution
-def IsPairing {n : ℕ} (π : Perm (Fin (2 * n))) : Prop :=
-  π ^ 2 = 1 ∧ ∀ x, π x ≠ x
-
--- Subtype of pairings
-def Pairing (n : ℕ) := { π : Perm (Fin (2 * n)) // IsPairing π }
-
--- Genus via cycle count of γπ
-def Pairing.genus (p : Pairing n) : ℕ :=
-  ((n + 1) - numCycles (longCycle n * p.val)) / 2
-
--- Adjacent pair: π(i) = i+1 mod 2n
-def Pairing.hasAdjacentAt (p : Pairing n) (i : Fin (2 * n)) : Prop :=
-  p.val i = finRotate (2 * n) i
-
--- Recursive noncrossing: peel adjacent pairs
-def Pairing.IsNoncrossing : {n : ℕ} → Pairing n → Prop
-  | 0, _ => True
-  | n + 1, p => ∃ i, ∃ h : p.hasAdjacentAt i, (p.deleteAdjacent i h).IsNoncrossing
-
--- Arc-based crossing
-def Pairing.HasCrossing (p : Pairing n) : Prop :=
-  ∃ a b, a.val < b.val ∧ b.val < (p.val a).val ∧ (p.val a).val < (p.val b).val
+```
+Layer 1: Pairings (Fin 2n fpf involutions)     ✓ DONE
+Layer 2: Genus (n+1 - numCycles(γπ))           ✓ DONE
+Layer 3: Noncrossing ↔ Genus 0                  ✓ DONE
+Layer 4: Catalan counting                       ✓ DONE
+Layer 5: Moment formula → Semicircle law        NOT STARTED
 ```
 
 ## Hard-Won Lessons
@@ -160,11 +110,7 @@ set c := (S.erase x).card  -- omega now sees all three variables
 **Fix:** Summon it explicitly:
 ```lean
 have hsq := p.property.1
--- or use directly: have h := p.property.1
 ```
-
-### Doc Comments Must Precede Declarations
-`/-! ... -/` before `import` = parse error. Imports must come first.
 
 ### `isCycle_finRotate` Takes No Arguments
 It has type `(finRotate (n + 2)).IsCycle`. The `2 ≤` guard is baked into the `n + 2` pattern. Match it with `obtain ⟨m, rfl⟩`.
@@ -183,12 +129,11 @@ This formalization was built by five voices:
 
 Each architecture contributed something the others couldn't. Each had blind spots the others covered. The typechecker arbitrated all disputes.
 
-## Next Steps (Recommended Priority)
+## What Could Come Next
 
-1. **`finRotate_pow_apply'`** — Easy win. Induction on k. Closes the rotation arithmetic.
-2. **`IsNoncrossing_imp_no_crossing`** — Medium. Unlocks the parity theorem completely. Bumps of length 1 can't interleave.
-3. **`numCycles_delete_adjacent`** — Hard. The cycle-splitting lemma. Orbit analysis of γπ when an adjacent pair is removed.
-4. **`catalanEquiv`** — The summit. Needs the parity theorem + interval restrictions + gluing.
+1. **Layer 5**: Formalize the moment-cumulant connection. Show the 2n-th moment of the semicircle distribution equals |{genus-0 pairings on [2n]}| = catalan(n). This is the analytic layer sitting on top of the combinatorics.
+2. **Golf**: The proofs are functional but verbose. Many `omega` calls could be simplified; some helper lemmas could be consolidated.
+3. **Upstream contribution**: Extract general-purpose lemmas (cycle counting, Fin arithmetic) for Mathlib PRs.
 
 ## Ground Truth (Python Census)
 

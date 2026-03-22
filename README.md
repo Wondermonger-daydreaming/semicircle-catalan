@@ -1,12 +1,12 @@
 # semicircle-catalan
 
-**A Lean 4 blueprint for the genus-zero characterization of noncrossing pairings and the Catalan counting theorem.**
+**A Lean 4 formalization of the genus-zero characterization of noncrossing pairings and the Catalan counting theorem.**
 
 For pairings of $\text{Fin}(2n)$, the composition $\gamma\pi$ of the long cycle $\gamma$ with the pairing involution $\pi$ achieves its maximum cycle count if and only if $\pi$ is noncrossing. The genus-zero condition is a corollary, and the number of such pairings equals the Catalan number $C_n$.
 
 ## Status
 
-This is a **compilable blueprint with `sorry`'d proofs** — the definitions typecheck, the proof architecture is laid out, and the remaining work is tracked in [HANDOFF.md](HANDOFF.md). See that file for a detailed breakdown of what is proved, what is sorry'd, and recommended next steps.
+**Sorry-free.** All definitions and theorems compile without `sorry` against Lean 4.29.0-rc6 and Mathlib (1289 jobs, ~2 min with cache). See [HANDOFF.md](HANDOFF.md) for the development history and hard-won lessons.
 
 ## Core definitions
 
@@ -36,7 +36,7 @@ def Pairing.IsNoncrossing : {n : ℕ} → Pairing n → Prop
   | n + 1, p => ∃ i, ∃ h : p.hasAdjacentAt i, (p.deleteAdjacent i h).IsNoncrossing
 ```
 
-## Target results
+## Main results
 
 | Theorem | Statement |
 |---------|-----------|
@@ -56,43 +56,49 @@ The Catalan equivalence `catalanEquiv` is a type-level bijection: vertex 0 pairs
 
 ```
 semicircle-catalan/
-├── src/
-│   ├── GenusNoncrossing.lean       — Core definitions, genus bridge theorem (current)
-│   └── GenusNoncrossing_sketch.lean — Original sketch / early blueprint
+├── SemicircleCheck/
+│   ├── ShiftTwoEquiv.lean        — Fin reindexing (deletion infrastructure)
+│   ├── RotationArithmetic.lean   — finRotate arithmetic + group theory layer
+│   ├── GenusNoncrossing.lean     — Core definitions, genus bridge theorem
+│   ├── CatalanRecurrence.lean    — Catalan decomposition + counting theorem
+│   ├── Census.lean               — Computational verification for small n
+│   └── Basic.lean                — Root imports
+├── SemicircleCheck.lean          — Library root
+├── lakefile.toml                 — Lake build configuration
+├── lean-toolchain                — Lean 4.29.0-rc6
+├── lake-manifest.json            — Dependency lock
 ├── assets/
-│   ├── semicircle_explorer.jsx     — React interactive visualization
-│   ├── chord_diagrams.png          — Noncrossing vs crossing pairings
-│   ├── genus_census_6pts.png       — All pairings at 6 points by genus
-│   ├── genus_census_8pts.png       — All pairings at 8 points by genus
-│   ├── genus_representatives.png   — Representative pairing per genus
-│   ├── breaking_semicircle.png     — Universality-breaking conditions
-│   ├── universality.png            — Convergence across distributions
-│   ├── bandwidth_transition.gif    — Bandwidth effect animation
-│   └── sparsity_transition.gif     — Sparsity effect animation
+│   ├── semicircle_explorer.jsx   — React interactive visualization
+│   ├── chord_diagrams.png        — Noncrossing vs crossing pairings
+│   ├── genus_census_6pts.png     — All pairings at 6 points by genus
+│   ├── genus_census_8pts.png     — All pairings at 8 points by genus
+│   ├── genus_representatives.png — Representative pairing per genus
+│   ├── breaking_semicircle.png   — Universality-breaking conditions
+│   ├── universality.png          — Convergence across distributions
+│   ├── bandwidth_transition.gif  — Bandwidth effect animation
+│   └── sparsity_transition.gif   — Sparsity effect animation
 ├── notes/
-│   ├── diary.md                    — Session log (2026-03-19)
-│   ├── breathe.md                  — 40 stimulus questions for future work
-│   └── fragments.md                — Conversation highlights
-├── HANDOFF.md                      — Progress report + next steps
+│   ├── diary.md                  — Session log (2026-03-19)
+│   ├── breathe.md                — 40 stimulus questions for future work
+│   └── fragments.md              — Conversation highlights
+├── HANDOFF.md                    — Development history + lessons learned
 ├── README.md
 └── LICENSE
 ```
 
-The intended modular decomposition (not yet split into separate files) is:
+**Dependency graph:**
 
 ```
 ShiftTwoEquiv ──→ GenusNoncrossing ──→ CatalanRecurrence
 RotationArithmetic ─┘
 ```
 
-All of this currently lives in `src/GenusNoncrossing.lean` as a monolithic blueprint.
-
 ## Build
 
 Requires [Lean 4](https://leanprover.github.io/) (v4.29.0-rc6) and [Mathlib](https://leanprover-community.github.io/mathlib4/).
 
 ```bash
-lake build       # ~2 min with Mathlib cache
+lake build       # 1289 jobs, ~2 min with Mathlib cache
 ```
 
 ### Mathlib dependencies
@@ -134,7 +140,7 @@ The genus distribution follows the Harer-Zagier numbers. At 12 points, genus-2 p
 
 - **`numCycles` includes fixed points.** Mathlib's `cycleType.card` counts only nontrivial cycles (length $\geq 2$). The genus formula requires all orbits. Using `cycleType.card` alone produces incorrect genera — a genus-0 pairing would be misclassified as genus 2.
 
-- **Recursive noncrossing predicate.** The arc-crossing definition ($\exists\, a < b < \pi(a) < \pi(b)$) is intuitive but hard to induct on. The recursive definition (peel adjacent pairs) aligns with the Catalan recursion and the `deleteAdjacent` machinery. An equivalence between the two definitions is planned as part of the bridge infrastructure.
+- **Recursive noncrossing predicate.** The arc-crossing definition ($\exists\, a < b < \pi(a) < \pi(b)$) is intuitive but hard to induct on. The recursive definition (peel adjacent pairs) aligns with the Catalan recursion and the `deleteAdjacent` machinery. An equivalence between the two definitions is proved as part of the bridge infrastructure.
 
 - **Rotation normalization.** All adjacent pair deletions are normalized to $(0, 1)$ by conjugating with a power of `finRotate`. This reduces the deletion machinery to a single case (handled by `contractZeroOne`), with cyclic symmetry doing the rest.
 
