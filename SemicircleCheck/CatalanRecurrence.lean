@@ -1,3 +1,5 @@
+import SemicircleCheck.FinRotateLemmas
+import SemicircleCheck.RotationArithmetic
 import SemicircleCheck.GenusNoncrossing
 import SemicircleCheck.EvenCard
 
@@ -148,13 +150,6 @@ private lemma mod_wrap {m x k : ℕ} (_hm : 0 < m) (hx : x < m) (_hk : k < m)
 /-- Mod arithmetic helper for rotation proofs. -/
 private lemma mod_no_wrap {m x k : ℕ} (_hm : 0 < m) (h : x + k < m) :
     (x + k) % m = x + k := Nat.mod_eq_of_lt h
-
-/-- finRotate^m = 1 on Fin m. -/
-private lemma finRotate_pow_self' {m : ℕ} (hm : 0 < m) : (finRotate m) ^ m = 1 := by
-  ext x : 1
-  have h := finRotate_pow_apply' hm m x
-  simp only [Equiv.Perm.coe_one, id_eq] at h ⊢
-  rw [h]; exact Fin.ext (by simp [Nat.add_mod_right, Nat.mod_eq_of_lt x.isLt])
 
 /-- Rotation preserves crossings (forward direction).
     Given a crossing a < b < p(a) < p(b), we construct a crossing

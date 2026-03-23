@@ -3,6 +3,7 @@ import Mathlib.GroupTheory.Perm.Fin
 import Mathlib.GroupTheory.Perm.Cycle.Type
 import Mathlib.Data.Fin.Basic
 import SemicircleCheck.ShiftTwoEquiv
+import SemicircleCheck.FinRotateLemmas
 import SemicircleCheck.RotationArithmetic
 
 /-!

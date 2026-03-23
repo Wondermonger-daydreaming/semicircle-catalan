@@ -1,5 +1,6 @@
 -- Root of the SemicircleCheck library.
 import SemicircleCheck.ShiftTwoEquiv
+import SemicircleCheck.FinRotateLemmas
 import SemicircleCheck.RotationArithmetic
 import SemicircleCheck.GenusNoncrossing
 import SemicircleCheck.EvenCard
