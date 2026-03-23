@@ -1,4 +1,5 @@
 import SemicircleCheck.GenusNoncrossing
+import SemicircleCheck.EvenCard
 
 /-!
   THE CATALAN SCALPEL
@@ -41,65 +42,7 @@ def outsideEquiv (n k : ℕ) (hk : k ≤ n) :
   left_inv j := by ext; simp
   right_inv i := by ext; simp; omega
 
-/-! ## 2. The Combinatorial Ledger
-
-Any finite set closed under a fixed-point-free involution has even cardinality.
-This is the counting engine that powers the parity theorem. -/
-
-/-- A set closed under a fpf involution has even cardinality.
-    Proof by strong induction: extract a pair, recurse. -/
-lemma even_card_of_fpf_closed {α : Type*} [DecidableEq α]
-    {p : Perm α} (hinv : ∀ x, p (p x) = x) (hfpf : ∀ x, p x ≠ x)
-    (S : Finset α) (h_closed : ∀ x ∈ S, p x ∈ S) :
-    Even S.card := by
-  -- Strong induction on S: for all T ⊂ S with the closure property, T.card is even
-  revert h_closed
-  induction S using Finset.strongInduction with
-  | H S ih =>
-    intro h_closed
-    -- Base: empty set
-    rcases S.eq_empty_or_nonempty with rfl | ⟨x, hx⟩
-    · exact ⟨0, by simp⟩
-    -- Step: extract x and p(x), remove both, recurse
-    · have hpx : p x ∈ S := h_closed x hx
-      have hne : x ≠ p x := fun h => hfpf x h.symm
-      -- S' = S minus the pair {x, p(x)}
-      let S' := (S.erase x).erase (p x)
-      -- S' ⊂ S (strictly smaller)
-      have hS'_ss : S' ⊂ S := by
-        refine ⟨fun y hy => ?_, fun h => ?_⟩
-        · simp only [S', Finset.mem_erase] at hy; exact hy.2.2
-        · have : x ∈ S' := h hx; simp [S', Finset.mem_erase] at this
-      -- S' is closed under p
-      have hS'_closed : ∀ y ∈ S', p y ∈ S' := by
-        intro y hy
-        simp only [S', Finset.mem_erase] at hy ⊢
-        refine ⟨?_, ?_, h_closed y hy.2.2⟩
-        · -- p y ≠ p x: otherwise y = x by injectivity, but y ≠ x
-          intro h; exact hy.2.1 (p.injective h)
-        · -- p y ≠ x: otherwise p(p y) = p x, so y = p x, but y ≠ p x
-          intro h; exact hy.1 (by rw [← hinv y, h])
-      -- Recurse: S'.card is even
-      have hS'_even := ih S' hS'_ss hS'_closed
-      -- Card arithmetic: S.card = S'.card + 2
-      have hpx_erase : p x ∈ S.erase x :=
-        Finset.mem_erase.mpr ⟨hne.symm, hpx⟩
-      have hcard : S.card = S'.card + 2 := by
-        -- Name the intermediate card so omega sees all three
-        set c := (S.erase x).card
-        have h1 : c = S.card - 1 := Finset.card_erase_of_mem hx
-        have h2 : S'.card = c - 1 := Finset.card_erase_of_mem hpx_erase
-        have h3 : ({x, p x} : Finset α).card ≤ S.card :=
-          Finset.card_le_card (by intro y hy; simp at hy; rcases hy with rfl | rfl <;> assumption)
-        rw [Finset.card_pair hne] at h3
-        have h4 : 1 ≤ c := Finset.card_pos.mpr ⟨p x, hpx_erase⟩
-        omega
-      -- Even + 2 = Even
-      rw [hcard]
-      obtain ⟨k, hk⟩ := hS'_even
-      exact ⟨k + 1, by omega⟩
-
-/-! ## 3. Arc-Crossing ↔ Recursive Noncrossing Bridge
+/-! ## 2. Arc-Crossing ↔ Recursive Noncrossing Bridge
 
 Two definitions of "noncrossing":
 - Recursive (our `IsNoncrossing`): peelable via adjacent pairs

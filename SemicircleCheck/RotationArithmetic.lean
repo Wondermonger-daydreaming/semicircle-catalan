@@ -25,10 +25,10 @@ This may already be in Mathlib as `finRotate_pow_apply` or similar.
 If not, it needs to be proved once and never touched again.
 -/
 
-/-- Powers of finRotate act by addition mod m.
-    This is the single arithmetic lemma the entire rotation
-    infrastructure depends on. -/
-lemma finRotate_pow_apply' {m : ℕ} (hm : 0 < m) (k : ℕ) (x : Fin m) :
+/-- Powers of `finRotate` act by addition modulo `m`.
+
+This is the arithmetic core behind the rotation normalization arguments. -/
+@[simp] lemma finRotate_pow_apply' {m : ℕ} (hm : 0 < m) (k : ℕ) (x : Fin m) :
     ((finRotate m) ^ k) x = ⟨(x.val + k) % m, Nat.mod_lt _ hm⟩ := by
   cases m with
   | zero => exact absurd hm (by omega)

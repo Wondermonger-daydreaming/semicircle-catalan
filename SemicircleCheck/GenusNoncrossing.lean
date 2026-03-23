@@ -1,3 +1,10 @@
+import Mathlib.Combinatorics.Enumerative.Catalan
+import Mathlib.GroupTheory.Perm.Fin
+import Mathlib.GroupTheory.Perm.Cycle.Type
+import Mathlib.Data.Fin.Basic
+import SemicircleCheck.ShiftTwoEquiv
+import SemicircleCheck.RotationArithmetic
+
 /-!
   GENUS ZERO ↔ NONCROSSING
 
@@ -13,13 +20,6 @@
   - Recursive noncrossing predicate (not brittle arc-crossing)
   - Three-stage proof decomposition via cycle count bound
 -/
-
-import Mathlib.Combinatorics.Enumerative.Catalan
-import Mathlib.GroupTheory.Perm.Fin
-import Mathlib.GroupTheory.Perm.Cycle.Type
-import Mathlib.Data.Fin.Basic
-import SemicircleCheck.ShiftTwoEquiv
-import SemicircleCheck.RotationArithmetic
 
 open Equiv Equiv.Perm Fintype
 
