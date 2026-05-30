@@ -4,9 +4,13 @@
 
 For pairings of $\text{Fin}(2n)$, the composition $\gamma\pi$ of the long cycle $\gamma$ with the pairing involution $\pi$ achieves its maximum cycle count if and only if $\pi$ is noncrossing. The genus-zero condition is a corollary, and the number of such pairings equals the Catalan number $C_n$.
 
+See [`ABOUT.md`](ABOUT.md) for a plain-language project overview and the Mathlib extraction path.
+
 ## Status
 
 **Sorry-free.** All definitions and theorems compile without `sorry` against Lean 4.29.0-rc6 and Mathlib (1289 jobs, ~2 min with cache).
+
+Current repository work is split between the completed semicircle/Catalan formalization and a staged Mathlib extraction effort. The extraction notes live in [`MATHLIB_PR_PLAN.md`](MATHLIB_PR_PLAN.md); the first submission package is in [`PR1_SUBMISSION.md`](PR1_SUBMISSION.md).
 
 ## Core definitions
 
@@ -58,14 +62,18 @@ The Catalan equivalence `catalanEquiv` is a type-level bijection: vertex 0 pairs
 semicircle-catalan/
 ├── SemicircleCheck/
 │   ├── ShiftTwoEquiv.lean        — Fin reindexing (deletion infrastructure)
-│   ├── RotationArithmetic.lean   — finRotate arithmetic + group theory layer
+│   ├── FinRotateLemmas.lean      — isolated finRotate lemmas for Mathlib extraction
+│   ├── RotationArithmetic.lean   — rotation normalization + group theory layer
 │   ├── GenusNoncrossing.lean     — Core definitions, genus bridge theorem
+│   ├── EvenCard.lean             — even-cardinality lemma for FPF involutions
 │   ├── CatalanRecurrence.lean    — Catalan decomposition + counting theorem
 │   └── Census.lean               — Computational verification for small n
 ├── SemicircleCheck.lean          — Library root (imports all modules)
 ├── lakefile.toml                 — Lake build configuration
 ├── lean-toolchain                — Lean 4.29.0-rc6
 ├── lake-manifest.json            — Dependency lock
+├── ABOUT.md                      — Project overview
+├── MATHLIB_PR_PLAN.md            — Planned Mathlib extraction sequence
 ├── README.md
 └── LICENSE
 ```
@@ -74,7 +82,8 @@ semicircle-catalan/
 
 ```
 ShiftTwoEquiv ──→ GenusNoncrossing ──→ CatalanRecurrence
-RotationArithmetic ─┘
+FinRotateLemmas ─→ RotationArithmetic ─┘
+EvenCard ────────────────────────────┘
 ```
 
 ## Build
@@ -82,8 +91,11 @@ RotationArithmetic ─┘
 Requires [Lean 4](https://leanprover.github.io/) (v4.29.0-rc6) and [Mathlib](https://leanprover-community.github.io/mathlib4/).
 
 ```bash
+lake exe cache get # optional but recommended
 lake build       # 1289 jobs, ~2 min with Mathlib cache
 ```
+
+The root import is `SemicircleCheck.lean`; `lake build` checks every module imported by that file.
 
 ### Mathlib dependencies
 
