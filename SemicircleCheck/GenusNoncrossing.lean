@@ -16,7 +16,7 @@ import SemicircleCheck.RotationArithmetic
 
   Key design choices:
   - `Pairing n` as a subtype (no dependent proof parameters)
-  - `numCycles` counting ALL cycles including fixed points
+  - `Equiv.Perm.numCycles` counting ALL cycles including fixed points
   - `finRotate` for the long cycle (not `cycleOf`)
   - Recursive noncrossing predicate, with a separate bridge to arc crossings
   - Three-stage proof decomposition via cycle count bound
@@ -35,9 +35,13 @@ For γπ = (1,3,5)(2)(4)(6), cycleType.card = 1 but numCycles = 4.
 The genus formula requires 4, not 1.
 -/
 
+namespace Equiv.Perm
+
 /-- Total number of cycles of a permutation, including fixed points. -/
-def numCycles {α : Type*} [Fintype α] [DecidableEq α] (σ : Perm α) : ℕ :=
+def numCycles {α : Type*} [Fintype α] [DecidableEq α] (σ : _root_.Equiv.Perm α) : ℕ :=
   σ.cycleType.card + card (Function.fixedPoints σ)
+
+end Equiv.Perm
 
 
 /-! ## 2. The Long Cycle
@@ -120,7 +124,7 @@ the cycle decomposition of σ. The three cases are:
 /-- numCycles is bounded by the cardinality of the type. -/
 private lemma numCycles_le_card {α : Type*} [Fintype α] [DecidableEq α] (σ : Perm α) :
     numCycles σ ≤ Fintype.card α := by
-  unfold numCycles
+  unfold Equiv.Perm.numCycles
   rw [Equiv.Perm.card_fixedPoints, Equiv.Perm.sum_cycleType]
   have h_ge := @multiset_sum_ge_two_card' σ.cycleType
     (fun c hc => Equiv.Perm.two_le_of_mem_cycleType hc)
@@ -132,7 +136,7 @@ private lemma numCycles_le_card {α : Type*} [Fintype α] [DecidableEq α] (σ :
 /-- Conjugation preserves numCycles: numCycles(τστ⁻¹) = numCycles(σ). -/
 private theorem numCycles_conj {α : Type*} [Fintype α] [DecidableEq α]
     (σ τ : Perm α) : numCycles (τ * σ * τ⁻¹) = numCycles σ := by
-  unfold numCycles
+  unfold Equiv.Perm.numCycles
   have hct : (τ * σ * τ⁻¹).cycleType = σ.cycleType := Equiv.Perm.cycleType_conj
   rw [hct]
   congr 1
@@ -141,7 +145,7 @@ private theorem numCycles_conj {α : Type*} [Fintype α] [DecidableEq α]
 /-- If numCycles σ = card α, then σ = 1 (defect zero implies identity). -/
 private lemma numCycles_eq_card_imp_one {α : Type*} [Fintype α] [DecidableEq α] (σ : Perm α)
     (h : numCycles σ = Fintype.card α) : σ = 1 := by
-  unfold numCycles at h
+  unfold Equiv.Perm.numCycles at h
   rw [Equiv.Perm.card_fixedPoints, Equiv.Perm.sum_cycleType] at h
   have h_ge := @multiset_sum_ge_two_card' σ.cycleType
     (fun c hc => Equiv.Perm.two_le_of_mem_cycleType hc)
@@ -158,7 +162,8 @@ private lemma swap_mul_swap_comm {α : Type*} [DecidableEq α] {a b c : α}
   ext x
   simp only [Perm.coe_mul, Function.comp_apply]
   by_cases hxa : x = a <;> by_cases hxb : x = b <;> by_cases hxc : x = c
-  all_goals subst_vars <;>  -- linter: <;> needed here, subst_vars creates multiple goals
+  all_goals
+    subst_vars
     simp_all [swap_apply_left, swap_apply_right, swap_apply_of_ne_of_ne, Ne.symm]
 
 /-- Multiplying by swap(a, σ(a)) on the left always increases numCycles by 1
@@ -172,7 +177,7 @@ private theorem numCycles_swap_mul_of_apply {α : Type*} [Fintype α] [Decidable
     (σ : Perm α) (a : α) (ha : σ a ≠ a) :
     numCycles (swap a (σ a) * σ) = numCycles σ + 1 := by
   -- Unfold numCycles and rewrite fixedPoints via support
-  unfold numCycles
+  unfold Equiv.Perm.numCycles
   rw [Equiv.Perm.card_fixedPoints, Equiv.Perm.card_fixedPoints,
       Equiv.Perm.sum_cycleType, Equiv.Perm.sum_cycleType]
   set τ := swap a (σ a) * σ
@@ -382,7 +387,7 @@ private lemma numCycles_mul_swaps_le {m : ℕ} (σ : Perm (Fin m))
 /-- numCycles of the long cycle equals 1 for n ≥ 1. -/
 private lemma numCycles_longCycle {n : ℕ} (hn : 1 ≤ n) :
     numCycles (longCycle n) = 1 := by
-  unfold numCycles longCycle
+  unfold Equiv.Perm.numCycles longCycle
   obtain ⟨k, rfl⟩ : ∃ k, n = k + 1 := ⟨n - 1, by omega⟩
   have hcyc : (finRotate (2 * (k + 1))).IsCycle := by
     show (finRotate (2 * k + 2)).IsCycle; exact isCycle_finRotate
@@ -392,11 +397,11 @@ private lemma numCycles_longCycle {n : ℕ} (hn : 1 ≤ n) :
     show (finRotate (2 * k + 2)).support = Finset.univ; exact support_finRotate
   rw [hsup, Finset.card_univ]; omega
 
-private lemma support_eq_univ_of_fpf' {α : Type*} [Fintype α] [DecidableEq α]
+private lemma support_eq_univ_of_fpf {α : Type*} [Fintype α] [DecidableEq α]
     (π : Perm α) (hfpf : ∀ x, π x ≠ x) : π.support = Finset.univ := by
   ext x; simp [Equiv.Perm.mem_support, hfpf]
 
-private lemma multiset_sum_const' {s : Multiset ℕ} {k : ℕ}
+private lemma multiset_sum_const {s : Multiset ℕ} {k : ℕ}
     (h : ∀ c ∈ s, c = k) : s.sum = k * s.card := by
   induction s using Multiset.induction with
   | empty => simp
@@ -405,7 +410,7 @@ private lemma multiset_sum_const' {s : Multiset ℕ} {k : ℕ}
     rw [h a (Multiset.mem_cons_self a s), ih fun c hc => h c (Multiset.mem_cons_of_mem hc)]
     ring
 
-private lemma pairing_cycleType_all_two' {n : ℕ} (p : Pairing n) :
+private lemma pairing_cycleType_all_two {n : ℕ} (p : Pairing n) :
     ∀ c ∈ p.val.cycleType, c = 2 := by
   intro c hc
   have hge := Equiv.Perm.two_le_of_mem_cycleType hc
@@ -413,11 +418,11 @@ private lemma pairing_cycleType_all_two' {n : ℕ} (p : Pairing n) :
   have := Nat.le_of_dvd (by omega) (dvd_trans (dvd_of_mem_cycleType hc) hord)
   omega
 
-private lemma pairing_cycleType_card' {n : ℕ} (p : Pairing n) :
+private lemma pairing_cycleType_card {n : ℕ} (p : Pairing n) :
     p.val.cycleType.card = n := by
   have hsum := Equiv.Perm.sum_cycleType p.val
-  rw [support_eq_univ_of_fpf' p.val p.property.2, Finset.card_univ, card_fin] at hsum
-  rw [multiset_sum_const' (pairing_cycleType_all_two' p)] at hsum; omega
+  rw [support_eq_univ_of_fpf p.val p.property.2, Finset.card_univ, card_fin] at hsum
+  rw [multiset_sum_const (pairing_cycleType_all_two p)] at hsum; omega
 
 /-- A pairing on Fin(2n) can be written as a product of n swaps.
 Each cycle in the pairing is a 2-cycle (swap), and there are exactly n of them. -/
@@ -426,8 +431,8 @@ private lemma pairing_swap_factorization {n : ℕ} (p : Pairing n) :
     ∀ g ∈ l, Equiv.Perm.IsSwap g := by
   -- The cycleFactorsFinset of p.val consists of n swaps
   -- We convert to a list
-  have hcard := pairing_cycleType_card' p
-  have hall := pairing_cycleType_all_two' p
+  have hcard := pairing_cycleType_card p
+  have hall := pairing_cycleType_all_two p
   -- Each cycle factor is a swap (support.card = 2)
   have hswap : ∀ c ∈ p.val.cycleFactorsFinset, Equiv.Perm.IsSwap c := by
     intro c hc
@@ -473,7 +478,7 @@ theorem Pairing.numCycles_le {n : ℕ} (p : Pairing n) :
   rcases Nat.eq_zero_or_pos n with rfl | hn
   · -- n = 0: Fin 0 is empty
     have : longCycle 0 * p.val = 1 := by ext x; exact Fin.elim0 x
-    rw [this]; unfold numCycles
+    rw [this]; unfold Equiv.Perm.numCycles
     simp [Equiv.Perm.cycleType_one]
   · -- n ≥ 1
     obtain ⟨l, hl_prod, hl_len, hl_swap⟩ := pairing_swap_factorization p
@@ -497,33 +502,6 @@ private lemma neg_one_pow_parity {a b : ℕ}
   · exfalso; simp at h
   · exfalso; simp at h
   · rw [Nat.not_even_iff_odd, Nat.odd_iff] at h1 h2; omega
-
-private lemma support_eq_univ_of_fpf {α : Type*} [Fintype α] [DecidableEq α]
-    (π : Perm α) (hfpf : ∀ x, π x ≠ x) : π.support = Finset.univ := by
-  ext x; simp [Equiv.Perm.mem_support, hfpf]
-
-private lemma multiset_sum_const {s : Multiset ℕ} {k : ℕ}
-    (h : ∀ c ∈ s, c = k) : s.sum = k * s.card := by
-  induction s using Multiset.induction with
-  | empty => simp
-  | cons a s ih =>
-    simp [Multiset.sum_cons, Multiset.card_cons]
-    rw [h a (Multiset.mem_cons_self a s), ih fun c hc => h c (Multiset.mem_cons_of_mem hc)]
-    ring
-
-private lemma pairing_cycleType_all_two {n : ℕ} (p : Pairing n) :
-    ∀ c ∈ p.val.cycleType, c = 2 := by
-  intro c hc
-  have hge := Equiv.Perm.two_le_of_mem_cycleType hc
-  have hord : orderOf p.val ∣ 2 := orderOf_dvd_of_pow_eq_one p.property.1
-  have := Nat.le_of_dvd (by omega) (dvd_trans (dvd_of_mem_cycleType hc) hord)
-  omega
-
-private lemma pairing_cycleType_card {n : ℕ} (p : Pairing n) :
-    p.val.cycleType.card = n := by
-  have hsum := Equiv.Perm.sum_cycleType p.val
-  rw [support_eq_univ_of_fpf p.val p.property.2, Finset.card_univ, card_fin] at hsum
-  rw [multiset_sum_const (pairing_cycleType_all_two p)] at hsum; omega
 
 private lemma sign_longCycle (n : ℕ) (hn : 1 ≤ n) :
     Equiv.Perm.sign (longCycle n) = -1 := by
@@ -553,7 +531,7 @@ private theorem numCycles_parity_even {n : ℕ} (p : Pairing n) (hn : 1 ≤ n) :
   have hmod := neg_one_pow_parity hct.symm
   rw [Equiv.Perm.sum_cycleType] at hmod
   have hnc_eq : numCycles σ = σ.cycleType.card + (2 * n - σ.support.card) := by
-    unfold numCycles; rw [Equiv.Perm.card_fixedPoints, card_fin, Equiv.Perm.sum_cycleType]
+    unfold Equiv.Perm.numCycles; rw [Equiv.Perm.card_fixedPoints, card_fin, Equiv.Perm.sum_cycleType]
   have hsupp_le : σ.support.card ≤ 2 * n :=
     calc σ.support.card ≤ Finset.univ.card := Finset.card_le_card (Finset.subset_univ _)
       _ = 2 * n := by simp [card_fin]
@@ -851,7 +829,7 @@ private theorem numCycles_orbit_absorption {n : ℕ} (hn : 1 ≤ n)
         rw [he_coe, hτ_val]
   -- Step 4: numCycles(extendDomain) = numCycles(τ) + 2
   have hext_nc : numCycles (τ.extendDomain e) = numCycles τ + 2 := by
-    unfold numCycles
+    unfold Equiv.Perm.numCycles
     have hct : (τ.extendDomain e).cycleType = τ.cycleType :=
       Equiv.Perm.cycleType_extendDomain _
     have hfp_ext : card (Function.fixedPoints (τ.extendDomain e)) =
@@ -1013,7 +991,7 @@ private lemma has_fixedPoint_of_maxCycles {n : ℕ} (p : Pairing (n + 1))
   have hsupp_le : σ.support.card ≤ 2 * (n + 1) := by
     calc σ.support.card ≤ Finset.univ.card := Finset.card_le_card (Finset.subset_univ _)
       _ = 2 * (n + 1) := by simp [card_fin]
-  unfold numCycles at h
+  unfold Equiv.Perm.numCycles at h
   rw [hfp_card, card_fin, hsum] at h
   have hfp_pos : 0 < card (Function.fixedPoints σ) := by
     rw [hfp_card, card_fin, hsum]; omega
@@ -1130,7 +1108,7 @@ theorem Pairing.genus_zero_iff_noncrossing {n : ℕ} (p : Pairing n) :
     constructor
     · intro _; trivial
     · intro _
-      unfold Pairing.genus numCycles longCycle
+      unfold Pairing.genus Equiv.Perm.numCycles longCycle
       simp [Equiv.Perm.cycleType, Function.fixedPoints]
       omega
   | succ m =>

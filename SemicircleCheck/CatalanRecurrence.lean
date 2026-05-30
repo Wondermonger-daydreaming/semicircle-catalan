@@ -28,7 +28,7 @@ open Equiv Equiv.Perm Fintype
 
 /-- Maps `Fin (2*k)` into the "inside" of the chord `(0, 2k+1)`.
     Index j shifts right by 1 to clear vertex 0. -/
-def insideEquiv (n k : ℕ) (hk : k ≤ n) :
+private def insideEquiv (n k : ℕ) (hk : k ≤ n) :
     Fin (2 * k) ≃ { i : Fin (2 * (n + 1)) // 0 < i.val ∧ i.val < 2 * k + 1 } where
   toFun j := ⟨⟨j.val + 1, by omega⟩, by constructor <;> simp⟩
   invFun i := ⟨i.val.val - 1, by omega⟩
@@ -37,7 +37,7 @@ def insideEquiv (n k : ℕ) (hk : k ≤ n) :
 
 /-- Maps `Fin (2*(n-k))` into the "outside" of the chord `(0, 2k+1)`.
     Index j shifts past the chord's right endpoint: j + 2k + 2. -/
-def outsideEquiv (n k : ℕ) (hk : k ≤ n) :
+private def outsideEquiv (n k : ℕ) (hk : k ≤ n) :
     Fin (2 * (n - k)) ≃ { i : Fin (2 * (n + 1)) // 2 * k + 1 < i.val } where
   toFun j := ⟨⟨j.val + 2 * k + 2, by omega⟩, by simp⟩
   invFun i := ⟨i.val.val - (2 * k + 2), by omega⟩
@@ -1992,3 +1992,63 @@ noncomputable def catalanEquiv (n : ℕ) :
     NoncrossingPairing (n + 1) ≃
     Σ (k : Fin (n + 1)), NoncrossingPairing k.val × NoncrossingPairing (n - k.val) where
   toFun p := catalanDecompose n p
+  invFun x := catalanAssemble n x
+  left_inv := fun p => by
+    apply Subtype.ext; apply Subtype.ext; apply Equiv.ext
+    intro x
+    -- Unfold catalanAssemble and catalanDecompose
+    simp only [catalanDecompose, catalanAssemble]
+    -- The assembled perm is built via Involutive.toPerm from assembleF
+    show (Function.Involutive.toPerm _ _) x = p.val.val x
+    simp only [Function.Involutive.toPerm]
+    exact assembleF_eq_of_decompose p.val p.property x
+  right_inv := catalanEquiv_right_inv n
+
+/-! ## 5. Counting: NoncrossingPairing n has catalan n elements
+
+`genus_zero_count` conceptually belongs with the genus/noncrossing story in
+GenusNoncrossing.lean, but is proved here because it requires `catalanEquiv`
+and the finitary cardinality machinery. The import direction
+(CatalanRecurrence imports GenusNoncrossing) makes this the only valid home. -/
+
+/-- IsNoncrossing is decidable (via the genus characterization). -/
+instance instDecidableIsNoncrossing {n : ℕ} (p : Pairing n) : Decidable p.IsNoncrossing :=
+  decidable_of_iff (p.genus = 0) p.genus_zero_iff_noncrossing
+
+instance instFintypeNoncrossingPairing {n : ℕ} : Fintype (NoncrossingPairing n) :=
+  Subtype.fintype _
+
+/-- The number of noncrossing pairings on 2n points equals the nth Catalan number. -/
+theorem card_noncrossingPairing_eq_catalan (n : ℕ) :
+    Fintype.card (NoncrossingPairing n) = catalan n := by
+  induction n using Nat.strongRecOn with
+  | _ n ih =>
+    match n with
+    | 0 =>
+      -- NoncrossingPairing 0 has exactly one element
+      simp only [catalan]
+      have : Unique (NoncrossingPairing 0) :=
+        { default := ⟨⟨1, rfl, fun ⟨_, hx⟩ => absurd hx (by omega)⟩, trivial⟩
+          uniq := fun ⟨⟨σ, _, _⟩, _⟩ => by
+            congr 1; congr 1
+            have : IsEmpty (Fin (2 * 0)) := ⟨fun ⟨_, hx⟩ => by omega⟩
+            ext x; exact this.elim x }
+      exact Fintype.card_unique
+    | n + 1 =>
+      -- Use catalanEquiv to decompose
+      rw [catalan_succ]
+      rw [show Fintype.card (NoncrossingPairing (n + 1)) =
+        Fintype.card (Σ (k : Fin (n + 1)), NoncrossingPairing k.val × NoncrossingPairing (n - k.val))
+        from Fintype.card_congr (catalanEquiv n)]
+      simp only [Fintype.card_sigma, Fintype.card_prod]
+      apply Finset.sum_congr rfl
+      intro k _
+      rw [ih k.val (by omega), ih (n - k.val) (by omega)]
+
+/-- **Corollary**: the number of genus-zero pairings equals Cₙ. -/
+theorem Pairing.genus_zero_count {n : ℕ} :
+    Fintype.card { p : Pairing n // p.genus = 0 } = catalan n := by
+  rw [show Fintype.card { p : Pairing n // p.genus = 0 } =
+    Fintype.card (NoncrossingPairing n)
+    from Fintype.card_congr (Equiv.subtypeEquivRight (fun p => p.genus_zero_iff_noncrossing))]
+  exact card_noncrossingPairing_eq_catalan n

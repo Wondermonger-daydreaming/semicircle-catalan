@@ -41,7 +41,7 @@ The formalization contains ~15 general-purpose lemmas buried among 3700+ lines o
 **Target file:** `Mathlib.GroupTheory.Perm.Cycle.Type`
 
 **What:**
-- `numCycles σ = σ.cycleType.card + card (Function.fixedPoints σ)` — counts all orbits
+- `Equiv.Perm.numCycles σ = σ.cycleType.card + card (Function.fixedPoints σ)` — counts all orbits
 - `numCycles_swap_mul_le` — multiplying by a transposition changes cycle count by at most 1
 - Supporting infrastructure (~5 lemmas from GenusNoncrossing.lean's transposition-bound section)
 

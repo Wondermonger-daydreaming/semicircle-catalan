@@ -6,7 +6,7 @@ The repository proves that pairings of `Fin (2 * n)` with genus zero are exactly
 
 ## The theorem in one paragraph
 
-A pairing is represented as a fixed-point-free involution `π` on `Fin (2 * n)`. Let `γ` be the long cycle, implemented by Mathlib's `finRotate`. The cycle count of `γ * π` determines a genus. The formalization proves that the maximum-cycle, genus-zero case is equivalent to the recursive noncrossing condition obtained by repeatedly deleting adjacent paired vertices. It then decomposes noncrossing pairings by the partner of `0`, giving the Catalan recurrence.
+A pairing is represented as a fixed-point-free involution `π` on `Fin (2 * n)`. Let `γ` be the long cycle, implemented by Mathlib's `finRotate`. The total cycle count `Equiv.Perm.numCycles (γ * π)` determines a genus. The formalization proves that the maximum-cycle, genus-zero case is equivalent to the recursive noncrossing condition obtained by repeatedly deleting adjacent paired vertices. It then decomposes noncrossing pairings by the partner of `0`, giving the Catalan recurrence.
 
 ## What is formalized
 

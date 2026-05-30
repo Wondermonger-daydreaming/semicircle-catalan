@@ -35,7 +35,7 @@ def IsPairing {n : ℕ} (π : Perm (Fin (2 * n))) : Prop :=
 def Pairing (n : ℕ) := { π : Perm (Fin (2 * n)) // IsPairing π }
 ```
 
-The long cycle `γ` is Mathlib's `finRotate`. The genus of a pairing is computed from the total number of cycles of `γ * π`, including fixed points.
+The long cycle `γ` is Mathlib's `finRotate`. The genus of a pairing is computed from `Equiv.Perm.numCycles (γ * π)`, a total cycle count including fixed points.
 
 Noncrossing is defined recursively: a pairing is noncrossing if it can be reduced to the empty pairing by repeatedly deleting adjacent paired vertices.
 
