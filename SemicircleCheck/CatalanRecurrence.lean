@@ -786,9 +786,12 @@ theorem noncrossing_zero_target_odd {n : ℕ} (p : Pairing (n + 1))
     have h_map : Finset.univ.map f = shadow := by
       ext x
       simp only [shadow, Finset.mem_map, Finset.mem_univ, true_and,
-        Finset.mem_filter, Function.Embedding.coeFn_mk]
+        Finset.mem_filter]
       constructor
-      · rintro ⟨j, rfl⟩; refine ⟨?_, ?_⟩ <;> simp [f] <;> omega
+      · rintro ⟨j, rfl⟩
+        constructor
+        · simp [f]
+        · simp [f]; omega
       · intro ⟨h_pos, h_lt⟩
         exact ⟨⟨x.val - 1, by omega⟩, Fin.ext (by simp [f]; omega)⟩
     rw [← h_map, Finset.card_map, Finset.card_univ, Fintype.card_fin]
@@ -1551,7 +1554,7 @@ private lemma assembleF_involutive (n : ℕ) (k : Fin (n + 1))
   have eval_caseM : ∀ (y : Fin (2 * (n + 1))) (hy : y.val = 2 * k.val + 1),
       (assembleF n k p_in p_out y).val = 0 := by
     intros y hy; unfold assembleF
-    simp [show y.val ≠ 0 from by omega, hy]
+    simp [hy]
   have eval_caseIn : ∀ (y : Fin (2 * (n + 1)))
       (hy0 : y.val ≠ 0) (hyt : y.val ≠ 2 * k.val + 1) (hyin : y.val ≤ 2 * k.val),
       (assembleF n k p_in p_out y).val = (p_in ⟨y.val - 1, by omega⟩).val + 1 := by
@@ -1726,7 +1729,7 @@ private lemma assemblePerm_isNoncrossing (n : ℕ) (k : Fin (n + 1))
   · by_cases hat : a.val = 2 * k.val + 1
     · -- a = 2k+1: assembleF(a) = 0, but b.val > a.val ≥ 1 and b.val < 0 is impossible
       have hapa : (assembleF n k p_in.val.val p_out.val.val a).val = 0 := by
-        unfold assembleF; simp [show a.val ≠ 0 from by omega, hat]
+        unfold assembleF; simp [hat]
       omega
     · by_cases hain : a.val ≤ 2 * k.val
       · -- a is inside: assembleF(a) is inside
@@ -1819,11 +1822,11 @@ private lemma assembleF_eq_of_decompose {n : ℕ} (p : Pairing (n + 1))
   split_ifs with hx0 hxt hxin
   · -- Case x = 0: assembleF gives ⟨2k+1, _⟩ = p(0)
     have : x = ⟨0, by omega⟩ := Fin.ext hx0
-    rw [this]; apply Fin.ext; simp only [Fin.val_mk]; linarith
+    rw [this]; apply Fin.ext; linarith
   · -- Case x = 2k+1: assembleF gives ⟨0, _⟩ = p(2k+1)
     -- By involution: p(p(0)) = 0, and p(0) = ⟨2k+1, _⟩, so p(2k+1) = 0
     have hp0 : p.val ⟨0, by omega⟩ = ⟨2 * k.val + 1, by omega⟩ := by
-      apply Fin.ext; simp only [Fin.val_mk]; linarith
+      apply Fin.ext; linarith
     have hinv0 := hinv ⟨0, by omega⟩
     rw [hp0] at hinv0
     have : x = ⟨2 * k.val + 1, by omega⟩ := Fin.ext (by simp; exact hxt)
@@ -1938,7 +1941,7 @@ private lemma catalanEquiv_right_inv (n : ℕ)
   apply sigma_ncp_ext (extractK_of_assemble n k p_in p_out)
   · -- insidePairing round-trip: restrictInsidePerm(assembled)(j).val = (p_in.val.val j').val
     intro j
-    simp only [catalanDecompose, catalanAssemble, insidePairing,
+    simp only [catalanAssemble, insidePairing,
                restrictInsidePerm, Equiv.coe_fn_mk, Fin.val_mk]
     -- j : Fin (2 * (extractK assembled h_nc).val)
     -- Need: (assembled ⟨j.val + 1, _⟩).val - 1 = (p_in.val.val ⟨j.val, _⟩).val
@@ -1954,14 +1957,13 @@ private lemma catalanEquiv_right_inv (n : ℕ)
     have hin : j.val + 1 ≤ 2 * k.val := by omega
     change (assembleF n k p_in.val.val p_out.val.val ⟨j.val + 1, _⟩).val - 1 =
       (p_in.val.val ⟨j.val, by omega⟩).val
-    simp only [assembleF, show (⟨j.val + 1, _⟩ : Fin (2 * (n + 1))).val = j.val + 1 from rfl,
-               h0, ht, hin, dite_false, dite_true, ↓reduceDIte, Fin.val_mk]
+    simp only [assembleF, h0, ht, hin, ↓reduceDIte, Fin.val_mk]
     have hfin : (⟨j.val + 1 - 1, by omega⟩ : Fin (2 * k.val)) = ⟨j.val, by omega⟩ :=
       Fin.ext (by simp)
     simp only [hfin]; omega
   · -- outsidePairing round-trip
     intro j
-    simp only [catalanDecompose, catalanAssemble, outsidePairing,
+    simp only [catalanAssemble, outsidePairing,
                restrictOutsidePerm, Equiv.coe_fn_mk, Fin.val_mk]
     have hek : (extractK _ (assemblePerm_isNoncrossing n k p_in p_out)).val = k.val :=
       congr_arg Fin.val (extractK_of_assemble n k p_in p_out)
@@ -1978,8 +1980,7 @@ private lemma catalanEquiv_right_inv (n : ℕ)
       ⟨ov, _⟩).val -
       (2 * (extractK _ (assemblePerm_isNoncrossing n k p_in p_out)).val + 2) =
       (p_out.val.val ⟨j.val, by omega⟩).val
-    simp only [assembleF, show (⟨ov, _⟩ : Fin (2 * (n + 1))).val = ov from rfl,
-               h0, ht, hout, dite_false, dite_true, ↓reduceDIte, Fin.val_mk]
+    simp only [assembleF, h0, ht, hout, ↓reduceDIte, Fin.val_mk]
     have hfin : (⟨ov - (2 * k.val + 2), by omega⟩ :
         Fin (2 * (n - k.val))) = ⟨j.val, by omega⟩ :=
       Fin.ext (by simp [hek, hov])
