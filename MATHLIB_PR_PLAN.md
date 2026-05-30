@@ -10,8 +10,10 @@ The formalization contains ~15 general-purpose lemmas buried among 3700+ lines o
 
 - [x] PR 3 groundwork: extracted `even_card_of_fpf_closed` into `SemicircleCheck/EvenCard.lean`
 - [x] PR 1 groundwork: added a Mathlib-style doc comment and `@[simp]` to `finRotate_pow_apply'`
+- [x] OpenGauss project initialized in `.gauss/project.yaml`
 - [ ] Build-check the refactor with `lake build`
 - [ ] Start the actual PR-1 extraction branch
+- [ ] Verify `PR1_FINROTATE_STANDALONE_PATCH.lean` against the target Mathlib file/import context
 
 ## PR Sequence
 
@@ -19,7 +21,7 @@ The formalization contains ~15 general-purpose lemmas buried among 3700+ lines o
 
 **Target file:** `Mathlib.GroupTheory.Perm.Fin`
 
-**What:** One lemma proving `(finRotate m)^k x = ⟨(x.val + k) % m, ...⟩`. Currently in `RotationArithmetic.lean`.
+**What:** One lemma proving `(finRotate m)^k x = ⟨(x.val + k) % m, ...⟩`. Currently isolated in `SemicircleCheck/FinRotateLemmas.lean`.
 
 **Why Mathlib wants this:** Every proof involving iterated rotations on `Fin` needs this. It's the arithmetic core that `finRotate` is missing.
 
@@ -31,7 +33,7 @@ The formalization contains ~15 general-purpose lemmas buried among 3700+ lines o
 
 **OpenGauss workflow:**
 ```
-/autoprove RotationArithmetic.lean   # Golf existing proofs
+/autoprove SemicircleCheck/FinRotateLemmas.lean   # Golf existing proofs
 ```
 
 ---
@@ -190,10 +192,12 @@ Source files and what they contribute to each PR:
 
 | Source File | Lines | PR 1 | PR 2 | PR 3 | PR 4 |
 |-------------|-------|------|------|------|------|
-| RotationArithmetic.lean | 152 | all | — | — | — |
-| ShiftTwoEquiv.lean | 134 | — | — | — | all |
-| GenusNoncrossing.lean | 1201 | — | ~200 | — | ~1000 |
-| CatalanRecurrence.lean | 2139 | — | — | ~30 | ~2100 |
+| FinRotateLemmas.lean | 78 | all | — | — | rotation corollaries |
+| RotationArithmetic.lean | 54 | — | — | — | conjugation helpers |
+| ShiftTwoEquiv.lean | 133 | — | — | — | deletion/reindexing |
+| EvenCard.lean | 61 | — | — | all | used by counting |
+| GenusNoncrossing.lean | 1180 | — | ~250 | — | genus/noncrossing bridge |
+| CatalanRecurrence.lean | 2055 | — | — | — | Catalan decomposition/counting |
 | Census.lean | 77 | — | — | — | — |
 
 ## Estimated Effort

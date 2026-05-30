@@ -3,6 +3,10 @@ import SemicircleCheck.RotationArithmetic
 import SemicircleCheck.GenusNoncrossing
 import SemicircleCheck.EvenCard
 
+-- Several proof-irrelevance bridges for `Fin` use `simp only [Fin.val_mk]` before `omega`.
+-- The unused-simp-args linter can misclassify those normalizations in this file.
+set_option linter.unusedSimpArgs false
+
 /-!
   THE CATALAN SCALPEL
 

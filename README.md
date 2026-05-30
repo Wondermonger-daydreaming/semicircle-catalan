@@ -4,7 +4,7 @@ A Lean 4 formalization of the genus-zero/noncrossing-pairing theorem behind the 
 
 The core result: for pairings of `Fin (2 * n)`, the genus-zero condition defined from the total cycle count `Equiv.Perm.numCycles (γ * π)` is equivalent to noncrossing, and the number of such pairings is the Catalan number `C_n`.
 
-For a plain-language overview, see [`ABOUT.md`](ABOUT.md). For the planned Mathlib extraction sequence, see [`MATHLIB_PR_PLAN.md`](MATHLIB_PR_PLAN.md).
+For a plain-language overview, see [`ABOUT.md`](ABOUT.md). For the planned Mathlib extraction sequence, see [`MATHLIB_PR_PLAN.md`](MATHLIB_PR_PLAN.md); the current working queue is tracked in [`NEXT_STEPS.md`](NEXT_STEPS.md).
 
 ## Status
 

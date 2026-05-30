@@ -51,6 +51,8 @@ Single-commit alternative: `feat: add power formulas for finRotate`
 
 In `Mathlib/GroupTheory/Perm/Fin.lean`, right after `sign_finRotate` and before `support_finRotate`.
 
+Inspection note: in the pinned Mathlib checkout, `Mathlib.GroupTheory.Perm.Fin` already imports `Mathlib.Logic.Equiv.Fin.Rotate`, and the surrounding section has `open Equiv.Perm`, so the patch should not need new imports. No existing `finRotate_pow_*` theorem was found in the checked Mathlib tree.
+
 ---
 
 ## Patch
@@ -85,7 +87,6 @@ theorem finRotate_pow_apply {m : ℕ} (hm : 0 < m) (k : ℕ) (x : Fin m) :
         omega
 
 /-- Rotating `Fin m` by `m` steps is the identity permutation. -/
-@[simp]
 theorem finRotate_pow_card {m : ℕ} (hm : 0 < m) : (finRotate m) ^ m = 1 := by
   ext x : 1
   have h := finRotate_pow_apply hm m x
@@ -116,4 +117,4 @@ theorem finRotate_pow_sub_val_apply_one {m : ℕ} (hm : 2 ≤ m) (i : Fin m) :
 - [ ] `lake exe cache get && lake build`
 - [ ] No extra imports added
 - [ ] Docstrings are one-liners matching surrounding style
-- [ ] If lint complains about `@[simp]` on `finRotate_pow_card`, drop it
+- [ ] If lint complains about `@[simp]` on `finRotate_pow_apply`, make it a plain theorem and add a separate simp-normal-form lemma if requested
