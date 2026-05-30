@@ -18,7 +18,7 @@ import SemicircleCheck.RotationArithmetic
   - `Pairing n` as a subtype (no dependent proof parameters)
   - `numCycles` counting ALL cycles including fixed points
   - `finRotate` for the long cycle (not `cycleOf`)
-  - Recursive noncrossing predicate (not brittle arc-crossing)
+  - Recursive noncrossing predicate, with a separate bridge to arc crossings
   - Three-stage proof decomposition via cycle count bound
 -/
 
@@ -30,7 +30,7 @@ Mathlib's `cycleType.card` counts only nontrivial cycles (length ≥ 2).
 The genus formula needs ALL cycles, including fixed points (1-cycles).
 We define `numCycles` as the sum of nontrivial cycles and fixed points.
 
-CRITICAL: Using `cycleType.card` alone gives wrong genera.
+Using `cycleType.card` alone gives wrong genera.
 For γπ = (1,3,5)(2)(4)(6), cycleType.card = 1 but numCycles = 4.
 The genus formula requires 4, not 1.
 -/
@@ -620,7 +620,7 @@ noncomputable def Pairing.deleteAdjacent {n : ℕ} (p : Pairing (n + 1))
   -- h₁': conjugation sends 1↦0 via involution
   have h₁' : p' ⟨1, by omega⟩ = ⟨0, by omega⟩ :=
     conjugate_sends_back hρ0 hρ1 p.property.1 h
-  -- Contract via the titanium deadbolt, then package as a pairing
+  -- Contract the normalized boundary pair, then package as a pairing.
   ⟨SemicircleCore.contractZeroOne p' h₀' h₁',
     -- contractZeroOne_isPairing + conjugation preserves pairing
     by
@@ -656,7 +656,7 @@ def Pairing.IsNoncrossing : {n : ℕ} → Pairing n → Prop
 
 /-! ## 6. The Bridge Theorem (Three Stages)
 
-Following GPT's decomposition, we prove the equivalence in stages:
+We prove the equivalence in stages:
 
 Stage A: numCycles(γπ) ≤ n + 1 for all pairings (upper bound)
 Stage B: numCycles(γπ) = n + 1 → noncrossing (equality → noncrossing)

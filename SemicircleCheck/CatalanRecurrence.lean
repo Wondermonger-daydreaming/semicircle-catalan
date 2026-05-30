@@ -705,10 +705,11 @@ theorem no_crossing_imp_IsNoncrossing {n : ℕ} (p : Pairing n)
 
 /-! ## 4. The Parity Theorem
 
-The quarantine is proved from ¬HasCrossing (pure logic + injectivity).
-The parity theorem is wired from quarantine + the combinatorial ledger. -/
+The shadow-closure lemma is proved from `¬ HasCrossing` using only order
+logic and injectivity. The parity theorem combines this closure with the
+even-cardinality lemma for fixed-point-free involutions. -/
 
-/-- The geometric quarantine: if p has no crossings, the shadow of
+/-- Shadow closure: if p has no crossings, the shadow of
     the chord (0, p(0)) is closed under p.
     Proof: p(x) > 0 by involution, p(x) < p(0) by contradiction
     (otherwise 0 < x < p(0) < p(x) is a crossing). -/
@@ -739,7 +740,7 @@ lemma shadow_closed_of_no_crossing {n : ℕ} (p : Pairing n)
       have h_cross : (p.val ⟨0, hn⟩).val < (p.val x).val := by omega
       exact absurd ⟨⟨0, hn⟩, x, hx_pos, hx_sh, h_cross⟩ h_nc
 
-/-- The quarantine from our recursive definition: composing the bridge. -/
+/-- Shadow closure from the recursive noncrossing definition, via the bridge. -/
 lemma noncrossing_mapsTo_shadow {n : ℕ} {p : Pairing n}
     (h_nc : p.IsNoncrossing) (x : Fin (2 * n))
     (hx_low : 0 < x.val) (hx_high : x.val < (p.val ⟨0, by omega⟩).val) :
@@ -750,8 +751,8 @@ lemma noncrossing_mapsTo_shadow {n : ℕ} {p : Pairing n}
 
     Proof by contradiction: if p(0) is even = 2k, define the shadow
     S = {i : Fin(2(n+1)) | 0 < i < 2k}. Its cardinality is 2k - 1 (odd).
-    The quarantine shows S is closed under p. The combinatorial ledger
-    demands S have even cardinality. Parity contradiction. -/
+    Shadow closure shows S is closed under p. Since p is a fixed-point-free
+    involution, S must have even cardinality. Parity contradiction. -/
 theorem noncrossing_zero_target_odd {n : ℕ} (p : Pairing (n + 1))
     (h_nc : p.IsNoncrossing) :
     Odd (p.val ⟨0, by omega⟩).val := by
@@ -773,7 +774,7 @@ theorem noncrossing_zero_target_odd {n : ℕ} (p : Pairing (n + 1))
   let shadow : Finset (Fin (2 * (n + 1))) :=
     Finset.univ.filter (fun i => 0 < i.val ∧ i.val < t)
   -- Shadow cardinality = t - 1 = 2k - 1 (odd)
-  -- Counting {1, ..., t-1} in Fin (2*(n+1)). Sorry'd: needs Finset.card_filter_lt_Fin.
+  -- Count `{1, ..., t-1}` in `Fin (2*(n+1))` by an explicit embedding.
   have ht_bound : t < 2 * (n + 1) := (p.val ⟨0, hn⟩).isLt
   have h_card : shadow.card = t - 1 := by
     -- Forge the embedding: Fin(t-1) ↪ Fin(2(n+1)) via j ↦ j+1
@@ -793,12 +794,12 @@ theorem noncrossing_zero_target_odd {n : ℕ} (p : Pairing (n + 1))
     rw [← h_map, Finset.card_map, Finset.card_univ, Fintype.card_fin]
   -- t - 1 = 2k - 1 is odd
   have h_odd : Odd shadow.card := by rw [h_card, hk]; exact ⟨k - 1, by omega⟩
-  -- Shadow is closed under p (from quarantine)
+  -- Shadow is closed under `p`.
   have h_closed : ∀ i ∈ shadow, p.val i ∈ shadow := by
     intro i hi
     simp only [shadow, Finset.mem_filter, Finset.mem_univ, true_and] at hi ⊢
     exact noncrossing_mapsTo_shadow h_nc i hi.1 hi.2
-  -- The ledger demands even cardinality
+  -- A fixed-point-free involution makes every closed finite set even.
   have hinv : ∀ y, p.val (p.val y) = y := by
     intro y; have h : p.val * p.val = 1 := p.property.1
     show (p.val * p.val) y = y; simp [h]
@@ -846,7 +847,7 @@ lemma extractK_le {n : ℕ} (p : Pairing (n + 1)) (h_nc : p.IsNoncrossing) :
 
     Proof: p(x) cannot be 0 (involution would force p(0)=x, but p(0)<x).
     p(x) cannot equal p(0) (injectivity, x≠0). p(x) cannot be in the
-    shadow (quarantine would force x into the shadow). So p(x) > 2k+1. -/
+    shadow (shadow closure would force x into the shadow). So p(x) > 2k+1. -/
 lemma outside_closed_of_noncrossing {n : ℕ} (p : Pairing (n + 1))
     (h_nc : p.IsNoncrossing) (x : Fin (2 * (n + 1)))
     (hx : 2 * (extractK p h_nc).val + 1 < x.val) :
@@ -869,7 +870,7 @@ lemma outside_closed_of_noncrossing {n : ℕ} (p : Pairing (n + 1))
     have heq2 := p.val.injective heq
     have : x.val = 0 := by simp [heq2]
     omega
-  -- p(x) not in shadow: if 0 < p(x) < p(0), quarantine gives 0 < x < p(0), contradiction
+  -- p(x) not in shadow: if 0 < p(x) < p(0), shadow closure gives 0 < x < p(0), contradiction
   have hpx_not_shadow :
       ¬(0 < (p.val x).val ∧ (p.val x).val < (p.val ⟨0, by omega⟩).val) := by
     intro ⟨h1, h2⟩
@@ -1009,15 +1010,11 @@ private lemma restrictInsidePerm_isNoncrossing {n : ℕ} (p : Pairing (n + 1))
   apply h_nc_p
   -- Translate: a < b < q(a) < q(b) in Fin(2k) to a+1 < b+1 < p(a+1) < p(b+1) in Fin(2(n+1))
   have hk := extractK_le p h_nc
-  -- Use the same proof terms as inside_closed and restrictInsidePerm
-  -- Both use: by have := _.isLt; have := extractK_le p h_nc; omega
-  -- So we work with that proof form throughout
+  -- Use the same proof terms as `inside_closed` and `restrictInsidePerm`.
   have ha_lt : a.val + 1 < 2 * (n + 1) := by have := a.isLt; omega
   have hb_lt : b.val + 1 < 2 * (n + 1) := by have := b.isLt; omega
-  -- Unfold q.val = restrictInsidePerm to get val equations
-  -- restrictInsidePerm uses ⟨a.val + 1, by have := a.isLt; have := extractK_le p h_nc; omega⟩
-  -- inside_closed uses the same proof form
-  -- Both should unify
+  -- Unfold `q.val = restrictInsidePerm` to get value equations.
+  -- `inside_closed` provides the same bound after unfolding the restricted map.
   have hqa_unfold : (q.val a).val =
       (p.val ⟨a.val + 1, by have := a.isLt; have := hk; omega⟩).val - 1 := rfl
   have hqb_unfold : (q.val b).val =
@@ -1206,10 +1203,7 @@ noncomputable def restrictOutsidePerm {n : ℕ} (p : Pairing (n + 1))
           by have := j.isLt; have := hk; omega⟩)).val := by
         intro h'
         congr 1; exact congrArg p.val (Fin.ext (by simp; omega))
-    -- Now we need to instantiate h_bridge with the specific proof term from the goal
-    -- But we don't know it! Let's try using have with an explicit proof term
-    -- Actually, since h_bridge is universally quantified and omega won't use it,
-    -- let's just instantiate it:
+    -- Instantiate `h_bridge` with the explicit bound proof used below.
     have h_bound' : (p.val ⟨j.val + 2 * (extractK p h_nc).val + 2,
           by have := j.isLt; have := hk; omega⟩).val -
         (2 * (extractK p h_nc).val + 2) + 2 * (extractK p h_nc).val + 2 < 2 * (n + 1) := by
@@ -1255,10 +1249,7 @@ noncomputable def restrictOutsidePerm {n : ℕ} (p : Pairing (n + 1))
             j.val + 2 * (extractK p h_nc).val + 2 := by
           rw [h_eq, h_bridge_inst, h_inv_val]
         omega
-    -- goal_fact is universally quantified. The GOAL after ext has a specific proof.
-    -- But Lean's ext should have reduced the goal to a form where we can apply goal_fact.
-    -- Actually, the goal IS of this form! It has some specific h, and goal_fact says
-    -- for ALL h, the equation holds. So `exact goal_fact _` should work!
+    -- `goal_fact` is quantified over the bound proof introduced by `ext`.
     exact goal_fact _
   right_inv j := by
     have hinv : ∀ y, p.val (p.val y) = y := by
@@ -1384,10 +1375,7 @@ noncomputable def restrictOutsidePerm {n : ℕ} (p : Pairing (n + 1))
           by have := j.isLt; have := hk; omega⟩)).val := by
         intro h'
         congr 1; exact congrArg p.val (Fin.ext (by simp; omega))
-    -- Now we need to instantiate h_bridge with the specific proof term from the goal
-    -- But we don't know it! Let's try using have with an explicit proof term
-    -- Actually, since h_bridge is universally quantified and omega won't use it,
-    -- let's just instantiate it:
+    -- Instantiate `h_bridge` with the explicit bound proof used below.
     have h_bound' : (p.val ⟨j.val + 2 * (extractK p h_nc).val + 2,
           by have := j.isLt; have := hk; omega⟩).val -
         (2 * (extractK p h_nc).val + 2) + 2 * (extractK p h_nc).val + 2 < 2 * (n + 1) := by
@@ -1433,10 +1421,7 @@ noncomputable def restrictOutsidePerm {n : ℕ} (p : Pairing (n + 1))
             j.val + 2 * (extractK p h_nc).val + 2 := by
           rw [h_eq, h_bridge_inst, h_inv_val]
         omega
-    -- goal_fact is universally quantified. The GOAL after ext has a specific proof.
-    -- But Lean's ext should have reduced the goal to a form where we can apply goal_fact.
-    -- Actually, the goal IS of this form! It has some specific h, and goal_fact says
-    -- for ALL h, the equation holds. So `exact goal_fact _` should work!
+    -- `goal_fact` is quantified over the bound proof introduced by `ext`.
     exact goal_fact _
 
 /-- The restricted outside permutation is a pairing. -/
@@ -1962,16 +1947,8 @@ private lemma catalanEquiv_right_inv (n : ℕ)
     have hek : (extractK _ (assemblePerm_isNoncrossing n k p_in p_out)).val = k.val :=
       congr_arg Fin.val (extractK_of_assemble n k p_in p_out)
     have hj_lt : j.val < 2 * k.val := by have := j.isLt; omega
-    -- The goal after simp is about the assembled perm applied to ⟨j.val + 1, _⟩
-    -- We need to show it unfolds to assembleF and then the inside branch fires.
-    -- The simp above should have reduced restrictInsidePerm to its definition.
-    -- Goal should be: (ap ⟨j+1, _⟩).val - 1 = (p_in.val.val ⟨j.val, _⟩).val
-    -- where ap is the assembled Perm (= toPerm assembleF).
-    -- Since simp may not have fully reduced, let's use change/show or more simp.
-    -- Try: unfold the toPerm application
-    -- Reduce to assembleF and then case-split on which branch fires
-    -- Show that assembleF applied to ⟨j+1, _⟩ gives the inside branch result
-    -- j < 2*k, so j+1 ≠ 0, j+1 ≠ 2k+1, j+1 ≤ 2k
+    -- Reduce the assembled permutation to `assembleF`; the input `j + 1`
+    -- lies in the inside interval, so the inside branch fires.
     have h0 : ¬ (j.val + 1 = 0) := by omega
     have ht : ¬ (j.val + 1 = 2 * k.val + 1) := by omega
     have hin : j.val + 1 ≤ 2 * k.val := by omega
@@ -2015,63 +1992,3 @@ noncomputable def catalanEquiv (n : ℕ) :
     NoncrossingPairing (n + 1) ≃
     Σ (k : Fin (n + 1)), NoncrossingPairing k.val × NoncrossingPairing (n - k.val) where
   toFun p := catalanDecompose n p
-  invFun x := catalanAssemble n x
-  left_inv := fun p => by
-    apply Subtype.ext; apply Subtype.ext; apply Equiv.ext
-    intro x
-    -- Unfold catalanAssemble and catalanDecompose
-    simp only [catalanDecompose, catalanAssemble]
-    -- The assembled perm is built via Involutive.toPerm from assembleF
-    show (Function.Involutive.toPerm _ _) x = p.val.val x
-    simp only [Function.Involutive.toPerm]
-    exact assembleF_eq_of_decompose p.val p.property x
-  right_inv := catalanEquiv_right_inv n
-
-/-! ## 5. Counting: NoncrossingPairing n has catalan n elements
-
-`genus_zero_count` conceptually belongs with the genus/noncrossing story in
-GenusNoncrossing.lean, but is proved here because it requires `catalanEquiv`
-and the finitary cardinality machinery. The import direction
-(CatalanRecurrence imports GenusNoncrossing) makes this the only valid home. -/
-
-/-- IsNoncrossing is decidable (via the genus characterization). -/
-instance instDecidableIsNoncrossing {n : ℕ} (p : Pairing n) : Decidable p.IsNoncrossing :=
-  decidable_of_iff (p.genus = 0) p.genus_zero_iff_noncrossing
-
-instance instFintypeNoncrossingPairing {n : ℕ} : Fintype (NoncrossingPairing n) :=
-  Subtype.fintype _
-
-/-- The number of noncrossing pairings on 2n points equals the nth Catalan number. -/
-theorem card_noncrossingPairing_eq_catalan (n : ℕ) :
-    Fintype.card (NoncrossingPairing n) = catalan n := by
-  induction n using Nat.strongRecOn with
-  | _ n ih =>
-    match n with
-    | 0 =>
-      -- NoncrossingPairing 0 has exactly one element
-      simp only [catalan]
-      have : Unique (NoncrossingPairing 0) :=
-        { default := ⟨⟨1, rfl, fun ⟨_, hx⟩ => absurd hx (by omega)⟩, trivial⟩
-          uniq := fun ⟨⟨σ, _, _⟩, _⟩ => by
-            congr 1; congr 1
-            have : IsEmpty (Fin (2 * 0)) := ⟨fun ⟨_, h⟩ => by omega⟩
-            ext x; exact this.elim x }
-      exact Fintype.card_unique
-    | n + 1 =>
-      -- Use catalanEquiv to decompose
-      rw [catalan_succ]
-      rw [show Fintype.card (NoncrossingPairing (n + 1)) =
-        Fintype.card (Σ (k : Fin (n + 1)), NoncrossingPairing k.val × NoncrossingPairing (n - k.val))
-        from Fintype.card_congr (catalanEquiv n)]
-      simp only [Fintype.card_sigma, Fintype.card_prod]
-      apply Finset.sum_congr rfl
-      intro k _
-      rw [ih k.val (by omega), ih (n - k.val) (by omega)]
-
-/-- **Corollary**: the number of genus-zero pairings equals Cₙ. -/
-theorem Pairing.genus_zero_count {n : ℕ} :
-    Fintype.card { p : Pairing n // p.genus = 0 } = catalan n := by
-  rw [show Fintype.card { p : Pairing n // p.genus = 0 } =
-    Fintype.card (NoncrossingPairing n)
-    from Fintype.card_congr (Equiv.subtypeEquivRight (fun p => p.genus_zero_iff_noncrossing))]
-  exact card_noncrossingPairing_eq_catalan n

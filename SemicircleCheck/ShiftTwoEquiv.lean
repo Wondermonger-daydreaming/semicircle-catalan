@@ -2,15 +2,14 @@ import Mathlib.Data.Fin.Basic
 import Mathlib.GroupTheory.Perm.Basic
 
 /-!
-  THE TITANIUM DEADBOLT
+  CANONICAL DELETION OF THE BOUNDARY PAIR
 
   Canonical deletion of coordinates {0, 1} from Fin (2n+2),
   producing Fin (2n) via the uniform shift x ↦ x + 2.
 
-  No piecewise branching. No casework. Pure linear arithmetic.
-
-  Contributed by Gemini. Verified computationally against all
-  noncrossing pairings through n = 6 (132 pairings, 0 mismatches).
+  The construction avoids piecewise reindexing by restricting to the
+  invariant subtype `{x | 2 ≤ x.val}` and conjugating through a single
+  equivalence.
 
   Architecture:
   1. shiftTwoEquiv: the bijection Fin(2n) ≃ { x : Fin(2n+2) | 2 ≤ x }
@@ -77,8 +76,8 @@ private lemma symm_mapsTo_remaining {π : Equiv.Perm (Fin (2 * n + 2))}
     Restrict π to the invariant subtype {x ≥ 2}, then pull back
     to Fin(2n) via shiftTwoEquiv.
 
-    Construction: build the restricted permutation on {x ≥ 2},
-    then conjugate through the shiftTwoEquiv deadbolt. -/
+    Construction: build the restricted permutation on `{x | 2 ≤ x.val}`,
+    then conjugate through `shiftTwoEquiv`. -/
 def contractZeroOne (π : Equiv.Perm (Fin (2 * n + 2)))
     (h₀ : π ⟨0, by omega⟩ = ⟨1, by omega⟩)
     (h₁ : π ⟨1, by omega⟩ = ⟨0, by omega⟩) :
