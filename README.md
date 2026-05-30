@@ -2,14 +2,14 @@
 
 A Lean 4 formalization of the genus-zero/noncrossing-pairing theorem behind the Catalan moments in the Wigner semicircle law.
 
-The core result: for pairings of `Fin (2 * n)`, the genus-zero condition defined from the cycle count of `γπ` is equivalent to noncrossing, and the number of such pairings is the Catalan number `C_n`.
+The core result: for pairings of `Fin (2 * n)`, the genus-zero condition defined from the total cycle count `Equiv.Perm.numCycles (γ * π)` is equivalent to noncrossing, and the number of such pairings is the Catalan number `C_n`.
 
 For a plain-language overview, see [`ABOUT.md`](ABOUT.md). For the planned Mathlib extraction sequence, see [`MATHLIB_PR_PLAN.md`](MATHLIB_PR_PLAN.md).
 
 ## Status
 
 - Sorry-free: no `sorry` or `admit` in the project sources.
-- Checked against Lean `v4.29.0-rc6` and Mathlib.
+- Checked against Lean `v4.29.0-rc6` and Mathlib with `lake build`.
 - Main Lake target: `SemicircleCheck`.
 - Current repo work: formalization is complete; extraction/golfing for Mathlib PRs is being staged.
 
@@ -91,16 +91,16 @@ A small census, recorded in [`SemicircleCheck/Census.lean`](SemicircleCheck/Cens
 | 10 | 945 | 42 | 42 |
 | 12 | 10,395 | 132 | 132 |
 
-## Mathlib extraction
+## Mathlib extraction status
 
 The project contains several pieces intended to be extractable into Mathlib:
 
-- `finRotate` power formulas from `FinRotateLemmas.lean`.
-- Even-cardinality lemma for finite sets closed under fixed-point-free involutions.
-- Total cycle-count infrastructure for permutations.
-- Noncrossing pairing API and Catalan counting theorem.
+- `finRotate` power formulas from `FinRotateLemmas.lean`; see [`PR1_SUBMISSION.md`](PR1_SUBMISSION.md) and [`PR1_FINROTATE_STANDALONE_PATCH.lean`](PR1_FINROTATE_STANDALONE_PATCH.lean).
+- `even_card_of_fpf_closed` from `EvenCard.lean`.
+- `Equiv.Perm.numCycles`, a total cycle-count API for permutations including fixed points.
+- The noncrossing pairing API and Catalan counting theorem.
 
-See [`PR1_SUBMISSION.md`](PR1_SUBMISSION.md) for the first prepared submission package.
+The planned sequence is tracked in [`MATHLIB_PR_PLAN.md`](MATHLIB_PR_PLAN.md).
 
 ## Mathematical context
 
